@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  frontend:
+    build: ./retreivo-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./retreivo-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - DATABASE_URL=postgresql://postgres:Vpcare%4024x7@db:5432/retreivo
+      - NODE_ENV=production
+    depends_on:
+      - db
+      - ml-service
+
+  ml-service:
+    build: ./ml-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: retreivo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "Vpcare@24x7"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./retreivo-backend/migrations:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  postgres_data:
+
+
