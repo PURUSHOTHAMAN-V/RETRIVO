@@ -1,0 +1,90 @@
+
+> retreivo-backend@0.1.0 dev
+> node --watch src/index.js
+
+Backend running on port 5000
+Database URL: postgresql://postgres:Vpcare@24x7@localhost:5432/retreivo
+JWT Secret: supersecre...
+Connected to PostgreSQL database
+::1 - - [25/Aug/2025:14:51:29 +0000] "GET /api/hub/claims?status=pending HTTP/1.1" 200 265 "-" "curl/8.14.1"
+Connected to PostgreSQL database
+::1 - - [25/Aug/2025:14:51:49 +0000] "PUT /api/hub/claim/1/approve HTTP/1.1" 200 44 "-" "curl/8.14.1"
+Restarting 'src/index.js'
+Backend running on port 5000
+Database URL: postgresql://postgres:Vpcare@24x7@localhost:5432/retreivo
+JWT Secret: supersecre...
+::1 - - [25/Aug/2025:14:52:42 +0000] "GET /api/ml/health HTTP/1.1" 304 - "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:52:42 +0000] "GET /api/ml/health HTTP/1.1" 304 - "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+Connected to PostgreSQL database
+::1 - - [25/Aug/2025:14:52:42 +0000] "GET /api/health HTTP/1.1" 304 - "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:52:42 +0000] "GET /api/health HTTP/1.1" 304 - "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+Connected to PostgreSQL database
+User logged in successfully: p@gmail.com
+::1 - - [25/Aug/2025:14:52:56 +0000] "POST /api/auth/login HTTP/1.1" 200 328 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:09 +0000] "POST /api/ml/match-text HTTP/1.1" 200 224 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+Connected to PostgreSQL database
+::1 - - [25/Aug/2025:14:53:10 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:10 +0000] "POST /api/ml/match-text HTTP/1.1" 200 224 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:10 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:11 +0000] "POST /api/ml/match-text HTTP/1.1" 200 224 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:11 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:19 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:19 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:20 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:20 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:20 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:20 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:20 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:20 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:20 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:20 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:20 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:21 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:22 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:23 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:24 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:24 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:24 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:24 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:24 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:24 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:24 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:24 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:53:24 +0000] "POST /api/user/search HTTP/1.1" 200 24 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+Connected to PostgreSQL database
+::1 - - [25/Aug/2025:14:54:34 +0000] "POST /api/user/report-found HTTP/1.1" 201 232 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:54:45 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+Connected to PostgreSQL database
+::1 - - [25/Aug/2025:14:54:45 +0000] "POST /api/user/search HTTP/1.1" 200 246 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:54:46 +0000] "POST /api/ml/match-text HTTP/1.1" 200 225 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:54:46 +0000] "POST /api/user/search HTTP/1.1" 200 246 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+::1 - - [25/Aug/2025:14:54:50 +0000] "POST /api/user/claim HTTP/1.1" 201 137 "http://localhost:5177/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"

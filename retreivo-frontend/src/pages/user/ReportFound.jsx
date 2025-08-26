@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { reportFoundItem } from '../../services/api'
 import { FiUpload, FiMapPin, FiCalendar, FiTag, FiCamera, FiX, FiCheck } from 'react-icons/fi'
 
 export default function ReportFound() {
@@ -19,6 +20,7 @@ export default function ReportFound() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const categories = [
     'Electronics', 'Clothing', 'Accessories', 'Documents', 
@@ -63,13 +65,17 @@ export default function ReportFound() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await reportFoundItem({
+        name: formData.itemName,
+        category: formData.category,
+        description: formData.description,
+        location: formData.location,
+        date_found: formData.dateFound
+      });
       setSuccess(true);
-      // Reset form after success
       setTimeout(() => {
         setFormData({
           itemName: '',
@@ -86,7 +92,11 @@ export default function ReportFound() {
         setCurrentStep(1);
         setSuccess(false);
       }, 3000);
-    }, 2000);
+    } catch (err) {
+      setError(err.message || 'Failed to submit report');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const nextStep = () => {
@@ -229,6 +239,18 @@ export default function ReportFound() {
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
+        {error && (
+          <div style={{
+            background: '#fef2f2',
+            color: '#b91c1c',
+            border: '1px solid #fecaca',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginBottom: '16px'
+          }}>
+            {error}
+          </div>
+        )}
         <div className="card">
           {/* Step 1: Item Details */}
           {currentStep === 1 && (

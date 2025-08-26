@@ -427,8 +427,86 @@ app.get('/api/user/rewards', authenticateToken, async (req, res) => {
 });
 
 // Hub endpoints (stubs)
+// List claims for hub action (demo: no hub auth for now)
+app.get('/api/hub/claims', async (req, res) => {
+  try {
+    const status = req.query.status || 'pending';
+
+    const foundClaims = await pool.query(`
+      SELECT c.claim_id, c.user_id AS claimer_user_id, c.item_id, c.item_type, c.status, c.created_at,
+             f.name AS item_name, f.description AS item_description, f.location AS item_location,
+             f.user_id AS finder_user_id
+      FROM claims c
+      JOIN found_items f ON c.item_id = f.item_id
+      WHERE c.item_type = 'found' AND c.status = $1
+      ORDER BY c.created_at DESC
+    `, [status]);
+
+    const lostClaims = await pool.query(`
+      SELECT c.claim_id, c.user_id AS claimer_user_id, c.item_id, c.item_type, c.status, c.created_at,
+             l.name AS item_name, l.description AS item_description, l.location AS item_location,
+             NULL::INTEGER AS finder_user_id
+      FROM claims c
+      JOIN lost_items l ON c.item_id = l.item_id
+      WHERE c.item_type = 'lost' AND c.status = $1
+      ORDER BY c.created_at DESC
+    `, [status]);
+
+    res.json({ ok: true, claims: [...foundClaims.rows, ...lostClaims.rows] });
+  } catch (err) {
+    console.error('List claims error:', err);
+    res.status(500).json({ ok: false, error: 'Failed to list claims' });
+  }
+});
+
+// Approve claim and reward finder (demo flow)
+app.put('/api/hub/claim/:id/approve', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const claimId = Number(req.params.id);
+    await client.query('BEGIN');
+
+    const claimRes = await client.query('SELECT * FROM claims WHERE claim_id = $1 FOR UPDATE', [claimId]);
+    if (claimRes.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ ok: false, error: 'Claim not found' });
+    }
+    const claim = claimRes.rows[0];
+    if (claim.status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ ok: false, error: 'Claim is not pending' });
+    }
+
+    // Update claim status
+    await client.query('UPDATE claims SET status = $1 WHERE claim_id = $2', ['approved', claimId]);
+
+    // If this is a found item claim, mark item claimed and reward finder
+    if (claim.item_type === 'found') {
+      const foundItemRes = await client.query('SELECT user_id FROM found_items WHERE item_id = $1 FOR UPDATE', [claim.item_id]);
+      const finderUserId = foundItemRes.rows[0]?.user_id;
+      await client.query("UPDATE found_items SET status = 'claimed' WHERE item_id = $1", [claim.item_id]);
+      if (finderUserId) {
+        const rewardAmount = 100; // demo reward
+        await client.query('UPDATE users SET rewards_balance = rewards_balance + $1 WHERE user_id = $2', [rewardAmount, finderUserId]);
+        await client.query('INSERT INTO rewards(user_id, amount, reason) VALUES($1, $2, $3)', [finderUserId, rewardAmount, 'Claim approved']);
+      }
+    } else if (claim.item_type === 'lost') {
+      // For lost item claim approval, mark lost item resolved (optional)
+      await client.query("UPDATE lost_items SET status = 'found' WHERE item_id = $1", [claim.item_id]);
+    }
+
+    await client.query('COMMIT');
+    res.json({ ok: true, claim_id: claimId, status: 'approved' });
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    console.error('Approve claim error:', err);
+    res.status(500).json({ ok: false, error: 'Failed to approve claim' });
+  } finally {
+    client.release();
+  }
+});
+
 app.get('/api/hub/reports', (_req, res) => res.status(501).json({ message: 'Not implemented' }));
-app.put('/api/hub/claim/:id/approve', (_req, res) => res.status(501).json({ message: 'Not implemented' }));
 app.get('/api/hub/donations', (_req, res) => res.status(501).json({ message: 'Not implemented' }));
 app.get('/api/hub/fraud-alerts', (_req, res) => res.status(501).json({ message: 'Not implemented' }));
 app.get('/api/hub/analytics', (_req, res) => res.status(501).json({ message: 'Not implemented' }));
