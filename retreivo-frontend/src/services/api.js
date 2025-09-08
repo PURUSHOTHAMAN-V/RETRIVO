@@ -170,6 +170,31 @@ export const getUserRewards = async () => {
   }
 };
 
+// Chat endpoints
+export const sendChatMessage = async (message) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/chat/message`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ message })
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getChatHistory = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/chat/history`, {
+      headers: getAuthHeaders()
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    throw error;
+  }
+};
+
 
 
 

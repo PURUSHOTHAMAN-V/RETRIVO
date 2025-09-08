@@ -28,6 +28,11 @@ app.use(limiter);
 
 // Database
 const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:Vpcare@24x7@localhost:5432/retreivo';
+
+// Health check endpoint that doesn't require database
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, message: 'Backend service is running' });
+});
 const pool = new Pool({ connectionString: databaseUrl });
 const jwtSecret = process.env.JWT_SECRET || 'dev_secret_change_me';
 
@@ -66,7 +71,7 @@ pool.on('error', (err) => {
 app.get('/api/health', async (_req, res) => {
   try {
     const result = await pool.query('SELECT 1 as ok');
-    res.json({ ok: true, db: result.rows[0].ok === 1 });
+    res.json({ ok: true, db: result.rows[0].ok === 1, message: 'Backend service is running with database connection' });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -511,6 +516,69 @@ app.get('/api/hub/donations', (_req, res) => res.status(501).json({ message: 'No
 app.get('/api/hub/fraud-alerts', (_req, res) => res.status(501).json({ message: 'Not implemented' }));
 app.get('/api/hub/analytics', (_req, res) => res.status(501).json({ message: 'Not implemented' }));
 
+// Chatbot endpoints
+app.post('/api/chat/message', authenticateToken, async (req, res) => {
+  try {
+    const { message } = req.body || {};
+    const userId = req.user.sub;
+    
+    if (!message) {
+      return res.status(400).json({ ok: false, error: 'Message is required' });
+    }
+    
+    // Store user message
+    await pool.query(
+      'INSERT INTO chat_messages(user_id, content, is_bot) VALUES($1, $2, $3)',
+      [userId, message, false]
+    );
+    
+    // Generate bot response based on user message
+    let botResponse = '';
+    
+    if (message.toLowerCase().includes('lost') || message.toLowerCase().includes('missing')) {
+      botResponse = 'To report a lost item, please go to the "Report Lost Item" section and provide details about your item.';
+    } else if (message.toLowerCase().includes('found')) {
+      botResponse = 'Thank you for finding an item! Please go to the "Report Found Item" section to help return it to its owner.';
+    } else if (message.toLowerCase().includes('reward') || message.toLowerCase().includes('points')) {
+      botResponse = 'You can earn rewards by helping return lost items to their owners. Check your rewards balance in the "Rewards" section.';
+    } else if (message.toLowerCase().includes('claim')) {
+      botResponse = 'If you see your lost item in the search results, you can claim it by clicking the "Claim" button on the item.';
+    } else if (message.toLowerCase().includes('hello') || message.toLowerCase().includes('hi')) {
+      botResponse = 'Hello! How can I help you with Retreivo today?';
+    } else {
+      botResponse = 'I\'m here to help with lost and found items. You can ask me about reporting lost items, found items, rewards, or claims.';
+    }
+    
+    // Store bot response
+    const result = await pool.query(
+      'INSERT INTO chat_messages(user_id, content, is_bot) VALUES($1, $2, $3) RETURNING message_id, content, is_bot, created_at',
+      [userId, botResponse, true]
+    );
+    
+    res.status(201).json({ ok: true, message: result.rows[0] });
+  } catch (err) {
+    console.error('Chat message error:', err);
+    res.status(500).json({ ok: false, error: 'Failed to process chat message' });
+  }
+});
+
+app.get('/api/chat/history', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    const limit = parseInt(req.query.limit) || 50;
+    
+    const result = await pool.query(
+      'SELECT message_id, content, is_bot, created_at FROM chat_messages WHERE user_id = $1 ORDER BY created_at ASC LIMIT $2',
+      [userId, limit]
+    );
+    
+    res.json({ ok: true, messages: result.rows });
+  } catch (err) {
+    console.error('Chat history error:', err);
+    res.status(500).json({ ok: false, error: 'Failed to fetch chat history' });
+  }
+});
+
 // ML endpoints proxy (stubs)
 const mlServiceBaseUrl = process.env.ML_BASE_URL || 'http://localhost:8000';
 
@@ -548,7 +616,7 @@ app.post('/api/ml/match-text', async (req, res) => {
     const data = await r.json();
     res.status(r.status).json(data);
   } catch (error) {
-    res.status(502).json({ message: 'Not implemented' });
+    res.status(502).json({ ok: false, error: error.message });
   }
 });
 

@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import Header from './components/common/Header'
 import Footer from './components/common/Footer'
 import ErrorBoundary from './components/common/ErrorBoundary'
+import ChatBot from './components/chat/ChatBot'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import LandingPage from './pages/LandingPage'
 import LoginSelection from './pages/auth/LoginSelection'
@@ -36,6 +37,7 @@ const AppContent = () => {
     }}>
       <Header />
       <main style={{ flex: 1 }}>
+        <ChatBot />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginSelection />} />

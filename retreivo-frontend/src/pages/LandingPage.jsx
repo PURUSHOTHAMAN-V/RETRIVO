@@ -33,7 +33,7 @@ export default function LandingPage() {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '24px',
-          '@media (max-width: 768px)': {
+          '@media(maxWidth: 768px)': {
             gridTemplateColumns: '1fr',
             gap: '20px'
           }
@@ -116,11 +116,11 @@ export default function LandingPage() {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '24px',
-          '@media (max-width: 768px)': {
+          '@media(maxWidth: 768px)': {
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '20px'
           },
-          '@media (max-width: 480px)': {
+          '@media(maxWidth: 480px)': {
             gridTemplateColumns: '1fr',
             gap: '16px'
           }

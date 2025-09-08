@@ -73,7 +73,7 @@ export default function Header() {
           display: 'flex',
           alignItems: 'center',
           gap: '32px',
-          '@media (max-width: 768px)': {
+          '@media(maxWidth: 768px)': {
             display: 'none'
           }
         }}>
@@ -275,7 +275,7 @@ export default function Header() {
             fontSize: '24px',
             cursor: 'pointer',
             color: '#111827',
-            '@media (max-width: 768px)': {
+            '@media(maxWidth: 768px)': {
               display: 'block'
             }
           }}
