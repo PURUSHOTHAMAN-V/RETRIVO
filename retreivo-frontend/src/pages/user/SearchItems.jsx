@@ -338,15 +338,27 @@ export default function SearchItems(){
       if (!item_id || !['lost','found'].includes(item_type)) {
         throw new Error('Invalid item to claim');
       }
-      await claimItem({ item_id, item_type });
-      // Optimistically update UI
-      setSearchResults(prev => prev.map(it => it.id === compoundId ? { ...it, status: 'claimed' } : it));
       
-      // Store claimed items in localStorage to persist across refreshes
-      const claimedItems = JSON.parse(localStorage.getItem('claimedItems') || '[]');
-      if (!claimedItems.includes(compoundId)) {
-        claimedItems.push(compoundId);
-        localStorage.setItem('claimedItems', JSON.stringify(claimedItems));
+      // Call the API to claim the item
+      const response = await claimItem({ item_id, item_type });
+      
+      if (response.ok) {
+        // Show success message
+        alert(`Item claimed successfully! Your claim is now pending approval from the hub.`);
+        
+        // Optimistically update UI to show the item as pending claim
+        setSearchResults(prev => prev.map(it => 
+          it.id === compoundId ? { ...it, status: 'pending_claim' } : it
+        ));
+        
+        // Store claimed items in localStorage to persist across refreshes
+        const claimedItems = JSON.parse(localStorage.getItem('claimedItems') || '[]');
+        if (!claimedItems.includes(compoundId)) {
+          claimedItems.push(compoundId);
+          localStorage.setItem('claimedItems', JSON.stringify(claimedItems));
+        }
+      } else {
+        throw new Error(response.error || 'Failed to claim item');
       }
     } catch (e) {
       setError(e.message || 'Failed to create claim');
@@ -355,10 +367,11 @@ export default function SearchItems(){
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'available': return '#10b981';
-      case 'claimed': return '#f59e0b';
-      case 'resolved': return '#3b82f6';
-      default: return '#6b7280';
+      case 'claimed': return '#10b981'; // Green
+      case 'pending_claim': return '#f59e0b'; // Amber/Orange
+      case 'available': return '#3b82f6'; // Blue
+      case 'resolved': return '#3b82f6'; // Blue
+      default: return '#6b7280'; // Gray
     }
   };
 
@@ -946,7 +959,7 @@ export default function SearchItems(){
                           color: getStatusColor(item.status),
                           fontWeight: '500'
                         }}>
-                          {item.status}
+                          {item.status === 'pending_claim' ? 'Pending Approval' : item.status}
                         </span>
                         <span style={{
                           fontSize: '12px',

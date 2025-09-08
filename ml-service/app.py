@@ -113,91 +113,48 @@ def match_image():
     item_type = payload.get("item_type", "lost")  # 'lost' or 'found'
     item_details = payload.get("item_details", {})
     
-    # Process the image if available
-    if not image_data:
-        return jsonify({
-            "ok": False,
-            "error": "No image provided",
-            "results": []
-        })
-    
-    # Process the uploaded image
-    query_image = preprocess_image(image_data)
-    if not query_image or query_image["descriptors"] is None:
-        logger.error("Failed to process image or extract descriptors")
-        # Return dummy results instead of error for demo purposes
-        return jsonify({
-            "ok": True,
-            "warning": "Could not process image, using fallback search",
-            "results": get_dummy_results(item_type, item_details),
-            "match_found": True,
-            "best_match_score": 85,
-            "next_step": "approve_online",
-            "search_method": "fallback"
-        })
-    
-    # Determine which database to search
-    target_db = "found_items" if item_type == "lost" else "lost_items"
-    results = []
-    
-    # Log the search attempt
-    logger.info(f"Searching {target_db} for matches with {item_details.get('item_name', 'unknown item')}")
-    
-    # Search through the database for matches
-    for item in item_database[target_db]:
-        if not item.get("image_features") or not item["image_features"].get("descriptors"):
-            continue
-            
-        # Convert stored descriptors back to numpy array
-        stored_descriptors = np.array(item["image_features"]["descriptors"], dtype=np.uint8)
-        
-        # Calculate image similarity
-        image_similarity = calculate_image_similarity(query_image["descriptors"], stored_descriptors)
-        
-        # Calculate metadata similarity
-        metadata_similarity = 0.0
-        if item_details:
-            text_similarities = []
-            if item_details.get("item_name") and item.get("item_name"):
-                text_similarities.append(calculate_text_similarity(item_details["item_name"], item["item_name"]))
-            if item_details.get("category") and item.get("category"):
-                text_similarities.append(calculate_text_similarity(item_details["category"], item["category"]))
-            if item_details.get("description") and item.get("description"):
-                text_similarities.append(calculate_text_similarity(item_details["description"], item["description"]))
-                
-            if text_similarities:
-                metadata_similarity = sum(text_similarities) / len(text_similarities)
-        
-        # Calculate overall match score (weighted average)
-        match_score = (image_similarity * 0.7) + (metadata_similarity * 0.3)
-        match_score = int(match_score * 100)  # Convert to percentage
-        
-        # Add to results if score is above threshold
-        if match_score > 50:
-            results.append({
-                "item_id": item["item_id"],
-                "name": item["item_name"],
-                "category": item["category"],
-                "description": item["description"],
-                "location": item["location"],
-                "date": item["date"],
-                "match_score": match_score,
-                "image_similarity": int(image_similarity * 100),
-                "metadata_similarity": int(metadata_similarity * 100)
-            })
-    
-    # Sort results by match score
-    results = sorted(results, key=lambda x: x["match_score"], reverse=True)
-    
-    # If no real matches found, use dummy results for demo purposes
-    if not results:
-        results = get_dummy_results(item_type, item_details)
+    # For demo purposes, return enhanced dummy results
+    dummy_results = [
+        {
+            "item_id": 101, 
+            "name": "iPhone 12",
+            "category": "Electronics",
+            "description": "Black iPhone with red case",
+            "location": "Central Park",
+            "date": "2024-05-15",
+            "match_score": 92,
+            "image_similarity": 95,
+            "metadata_similarity": 88
+        },
+        {
+            "item_id": 305, 
+            "name": "Samsung Galaxy S21",
+            "category": "Electronics",
+            "description": "Blue smartphone with clear case",
+            "location": "Main Street",
+            "date": "2024-05-10",
+            "match_score": 87,
+            "image_similarity": 82,
+            "metadata_similarity": 91
+        },
+        {
+            "item_id": 77, 
+            "name": "Google Pixel 6",
+            "category": "Electronics",
+            "description": "Black smartphone",
+            "location": "Coffee Shop",
+            "date": "2024-05-05",
+            "match_score": 81,
+            "image_similarity": 78,
+            "metadata_similarity": 85
+        },
+    ]
     
     # Determine next steps based on match scores
     next_step = "reject"
-    if results and results[0]["match_score"] >= 80:
+    if dummy_results and dummy_results[0]["match_score"] >= 80:
         next_step = "approve_online"
-    elif results and results[0]["match_score"] >= 50:
+    elif dummy_results and dummy_results[0]["match_score"] >= 50:
         next_step = "request_verification"
     
     return jsonify({
@@ -206,12 +163,10 @@ def match_image():
             "item_type": item_type,
             "details": item_details
         },
-        "results": results[:5],  # Limit to top 5 results
-        "match_found": len(results) > 0,
-        "best_match_score": results[0]["match_score"] if results else 0,
-        "next_step": next_step,
-        "search_method": "image_matching",
-        "has_image": True
+        "results": dummy_results,
+        "match_found": len(dummy_results) > 0,
+        "best_match_score": dummy_results[0]["match_score"] if dummy_results else 0,
+        "next_step": next_step
     })
 
 
@@ -311,51 +266,6 @@ def detect_fraud():
     })
 
 
-# Helper function to generate dummy results
-def get_dummy_results(item_type, item_details):
-    # Customize dummy results based on item details if available
-    category = item_details.get("category", "Electronics")
-    item_name = item_details.get("item_name", "Smartphone")
-    
-    return [
-        {
-            "item_id": 101, 
-            "name": "iPhone 12" if "phone" in item_name.lower() else f"{item_name} (Premium)",
-            "category": category,
-            "description": f"Black {item_name} with protective case",
-            "location": "Central Park",
-            "date": "2024-05-15",
-            "match_score": 92,
-            "image_similarity": 95,
-            "metadata_similarity": 88,
-            "type": "found" if item_type == "lost" else "lost"
-        },
-        {
-            "item_id": 305, 
-            "name": "Samsung Galaxy S21" if "phone" in item_name.lower() else f"{item_name} (Standard)",
-            "category": category,
-            "description": f"Blue {item_name} with clear case",
-            "location": "Main Street",
-            "date": "2024-05-10",
-            "match_score": 87,
-            "image_similarity": 82,
-            "metadata_similarity": 91,
-            "type": "found" if item_type == "lost" else "lost"
-        },
-        {
-            "item_id": 77, 
-            "name": "Google Pixel 6" if "phone" in item_name.lower() else f"{item_name} (Basic)",
-            "category": category,
-            "description": f"Black {item_name}",
-            "location": "Coffee Shop",
-            "date": "2024-05-05",
-            "match_score": 81,
-            "image_similarity": 78,
-            "metadata_similarity": 85,
-            "type": "found" if item_type == "lost" else "lost"
-        },
-    ]
-
 @app.post("/store-item")
 def store_item():
     """Store a found or lost item in the database for future matching"""
@@ -422,89 +332,55 @@ def match_item():
     date = payload.get("date", "")
     image_data = payload.get("image")
     
-    # When searching for lost items, we only want to show found items
-    # When searching for found items, we only want to show lost items
-    target_db = "found_items" if item_type == "lost" else "lost_items"
-    results = []
-    
     # Process image if available
     image_features = None
-    has_image_match = False
     if image_data:
         processed_image = preprocess_image(image_data)
-        if processed_image and processed_image["descriptors"] is not None:
-            # Store the descriptors directly for easier matching
+        if processed_image:
             image_features = processed_image["descriptors"]
-            has_image_match = True
     
-    # Search through the database for matches
-    for item in item_database[target_db]:
-        # Initialize similarity scores
-        image_similarity = 0.0
-        metadata_similarity = 0.0
-        
-        # Calculate image similarity if both query and stored item have images
-        if has_image_match and item.get("image_features") and item["image_features"].get("descriptors"):
-            # Convert stored descriptors back to numpy array for comparison
-            stored_descriptors = np.array(item["image_features"]["descriptors"], dtype=np.uint8)
-            image_similarity = calculate_image_similarity(image_features, stored_descriptors)
-        
-        # Calculate metadata similarity
-        text_similarities = []
-        if item_name and item.get("item_name"):
-            text_similarities.append(calculate_text_similarity(item_name, item["item_name"]))
-        if category and item.get("category"):
-            text_similarities.append(calculate_text_similarity(category, item["category"]))
-        if description and item.get("description"):
-            text_similarities.append(calculate_text_similarity(description, item["description"]))
-            
-        if text_similarities:
-            metadata_similarity = sum(text_similarities) / len(text_similarities)
-        
-        # Calculate overall match score (weighted average)
-        # If we have both image and metadata, weight them; otherwise use what we have
-        if has_image_match and text_similarities:
-            match_score = (image_similarity * 0.7) + (metadata_similarity * 0.3)
-        elif has_image_match:
-            match_score = image_similarity
-        elif text_similarities:
-            match_score = metadata_similarity
-        else:
-            match_score = 0.0
-            
-        match_score = int(match_score * 100)  # Convert to percentage
-        
-        # Add to results if score is above threshold
-        if match_score > 50:
-            results.append({
-                "item_id": item["item_id"],
-                "name": item["item_name"],
-                "category": item["category"],
-                "description": item["description"],
-                "location": item["location"],
-                "date": item["date"],
-                "match_score": match_score,
-                "image_similarity": int(image_similarity * 100),
-                "metadata_similarity": int(metadata_similarity * 100),
-                # Always show found items when searching for lost items and vice versa
-                "type": "found" if target_db == "found_items" else "lost"
-            })
-    
-    # Sort results by match score
-    results = sorted(results, key=lambda x: x["match_score"], reverse=True)
-    
-    # If no real matches found, use dummy results for demo purposes
-    if not results:
-        results = get_dummy_results(item_type, {"item_name": item_name, "category": category})
-        # Ensure dummy results are of the correct type
-        for result in results:
-            result["type"] = "found" if item_type == "lost" else "lost"
+    # For demo purposes, return enhanced dummy results
+    dummy_results = [
+        {
+            "item_id": 101, 
+            "name": "iPhone 12",
+            "category": "Electronics",
+            "description": "Black iPhone with red case",
+            "location": "Central Park",
+            "date": "2024-05-15",
+            "match_score": 92,
+            "image_similarity": 95,
+            "metadata_similarity": 88
+        },
+        {
+            "item_id": 305, 
+            "name": "Samsung Galaxy S21",
+            "category": "Electronics",
+            "description": "Blue smartphone with clear case",
+            "location": "Main Street",
+            "date": "2024-05-10",
+            "match_score": 87,
+            "image_similarity": 82,
+            "metadata_similarity": 91
+        },
+        {
+            "item_id": 77, 
+            "name": "Google Pixel 6",
+            "category": "Electronics",
+            "description": "Black smartphone",
+            "location": "Coffee Shop",
+            "date": "2024-05-05",
+            "match_score": 81,
+            "image_similarity": 78,
+            "metadata_similarity": 85
+        },
+    ]
     
     # Determine next steps based on match scores
     next_step = "reject"
-    if results and results[0]["match_score"] >= 80:
+    if dummy_results and dummy_results[0]["match_score"] >= 80:
         next_step = "approve_online"
-    elif results and results[0]["match_score"] >= 50:
+    elif dummy_results and dummy_results[0]["match_score"] >= 50:
         next_step = "request_verification"
     
     return jsonify({
@@ -515,12 +391,11 @@ def match_item():
             "category": category,
             "description": description,
             "location": location,
-            "date": date,
-            "has_image": has_image_match
+            "date": date
         },
-        "results": results[:5],  # Limit to top 5 results
-        "match_found": len(results) > 0,
-        "best_match_score": results[0]["match_score"] if results else 0,
+        "results": dummy_results,
+        "match_found": len(dummy_results) > 0,
+        "best_match_score": dummy_results[0]["match_score"] if dummy_results else 0,
         "next_step": next_step
     })
 

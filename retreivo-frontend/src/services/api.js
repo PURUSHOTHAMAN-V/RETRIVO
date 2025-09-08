@@ -168,6 +168,30 @@ export const claimItem = async (claimData) => {
   }
 };
 
+// Hub endpoints
+export const getHubClaims = async (status = 'pending') => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/hub/claims?status=${status}`, {
+      headers: getAuthHeaders()
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const approveHubClaim = async (claimId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/hub/claim/${claimId}/approve`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getUserRewards = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/user/rewards`, {

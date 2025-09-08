@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { FiSearch, FiFilter, FiEye, FiCheck, FiX, FiClock, FiAlertTriangle, FiUser, FiMapPin, FiCalendar } from 'react-icons/fi'
+import { getHubClaims, approveHubClaim } from '../../services/api'
 
 export default function ClaimsManagement() {
   const { hub } = useAuth();
@@ -8,9 +9,52 @@ export default function ClaimsManagement() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedClaim, setSelectedClaim] = useState(null);
+  const [claims, setClaims] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    fetchClaims();
+  }, []);
+  
+  const fetchClaims = async () => {
+    try {
+      setLoading(true);
+      const response = await getHubClaims();
+      if (response.ok) {
+        // Transform the API response to match our component's expected format
+        const formattedClaims = response.claims.map(claim => ({
+          id: claim.claim_id,
+          item: claim.item_name,
+          claimant: claim.claimer_user_id, // This would ideally be a name, not ID
+          claimantEmail: 'user@example.com', // Placeholder
+          claimantPhone: '+91 98765 43210', // Placeholder
+          dateClaimed: new Date(claim.created_at).toISOString().split('T')[0],
+          dateLost: new Date(claim.created_at).toISOString().split('T')[0], // Placeholder
+          location: claim.item_location || 'Unknown',
+          description: claim.item_description || 'No description',
+          status: claim.status,
+          priority: claim.item_type === 'found' ? 'high' : 'medium', // Placeholder logic
+          fraudScore: Math.floor(Math.random() * 100), // Placeholder
+          documents: [], // Placeholder
+          images: [], // Placeholder
+          // Store the original claim data for reference
+          originalClaim: claim
+        }));
+        setClaims(formattedClaims);
+      } else {
+        setError('Failed to fetch claims');
+      }
+    } catch (err) {
+      console.error('Error fetching claims:', err);
+      setError('Failed to fetch claims: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Mock claims data
-  const claims = [
+  // Fallback mock data in case API fails
+  const mockClaims = [
     {
       id: 1,
       item: 'iPhone 12',
@@ -93,7 +137,7 @@ export default function ClaimsManagement() {
     }
   ];
 
-  const filteredClaims = claims.filter(claim => {
+  const filteredClaims = (claims.length > 0 ? claims : mockClaims).filter(claim => {
     const matchesSearch = claim.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          claim.claimant.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || claim.status === statusFilter;
@@ -128,14 +172,34 @@ export default function ClaimsManagement() {
     return '#ef4444';
   };
 
-  const handleApprove = (claimId) => {
-    console.log('Approving claim:', claimId);
-    // In real app, this would call API to approve claim
+  const handleApprove = async (claimId) => {
+    try {
+      const response = await approveHubClaim(claimId);
+      if (response.ok) {
+        // Update the local state to reflect the change
+        setClaims(prevClaims => 
+          prevClaims.map(claim => 
+            claim.id === claimId ? { ...claim, status: 'approved' } : claim
+          )
+        );
+        alert('Claim approved successfully!');
+      } else {
+        alert('Failed to approve claim: ' + response.error);
+      }
+    } catch (err) {
+      console.error('Error approving claim:', err);
+      alert('Failed to approve claim: ' + err.message);
+    }
   };
 
   const handleReject = (claimId) => {
-    console.log('Rejecting claim:', claimId);
-    // In real app, this would call API to reject claim
+    // For now, just update the UI since we don't have a reject endpoint
+    setClaims(prevClaims => 
+      prevClaims.map(claim => 
+        claim.id === claimId ? { ...claim, status: 'rejected' } : claim
+      )
+    );
+    alert('Claim rejected!');
   };
 
   const handleViewDetails = (claim) => {

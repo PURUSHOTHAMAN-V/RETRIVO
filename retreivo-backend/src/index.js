@@ -525,6 +525,7 @@ app.post('/api/user/search', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/user/claim', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
   try {
     const { item_id, item_type } = req.body || {};
     const userId = req.user.sub;
@@ -537,15 +538,56 @@ app.post('/api/user/claim', authenticateToken, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid item type' });
     }
     
-    const result = await pool.query(
+    await client.query('BEGIN');
+    
+    // First, check if the item is available for claiming
+    let itemStatus;
+    if (item_type === 'found') {
+      const itemResult = await client.query('SELECT status FROM found_items WHERE item_id = $1', [item_id]);
+      if (itemResult.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ ok: false, error: 'Item not found' });
+      }
+      itemStatus = itemResult.rows[0].status;
+      
+      if (itemStatus !== 'available') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ ok: false, error: 'Item is not available for claiming' });
+      }
+      
+      // Update the item status to 'pending_claim'
+      await client.query("UPDATE found_items SET status = 'pending_claim' WHERE item_id = $1", [item_id]);
+    } else if (item_type === 'lost') {
+      const itemResult = await client.query('SELECT status FROM lost_items WHERE item_id = $1', [item_id]);
+      if (itemResult.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ ok: false, error: 'Item not found' });
+      }
+      itemStatus = itemResult.rows[0].status;
+      
+      if (itemStatus !== 'active') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ ok: false, error: 'Item is not available for claiming' });
+      }
+      
+      // Update the item status to 'pending_claim'
+      await client.query("UPDATE lost_items SET status = 'pending_claim' WHERE item_id = $1", [item_id]);
+    }
+    
+    // Create the claim
+    const result = await client.query(
       'INSERT INTO claims(user_id, item_id, item_type, status) VALUES($1, $2, $3, $4) RETURNING claim_id, user_id, item_id, item_type, status, created_at',
       [userId, item_id, item_type, 'pending']
     );
     
+    await client.query('COMMIT');
     res.status(201).json({ ok: true, claim: result.rows[0] });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Claim error:', err);
     res.status(500).json({ ok: false, error: 'Failed to create claim' });
+  } finally {
+    client.release();
   }
 });
 
