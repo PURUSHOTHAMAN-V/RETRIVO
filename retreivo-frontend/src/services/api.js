@@ -2,10 +2,10 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Helper function to get auth headers
-const getAuthHeaders = () => {
+const getAuthHeaders = (isMultipart = false) => {
   const token = localStorage.getItem('token');
   return {
-    'Content-Type': 'application/json',
+    ...(!isMultipart && { 'Content-Type': 'application/json' }),
     ...(token && { 'Authorization': `Bearer ${token}` })
   };
 };
@@ -98,6 +98,9 @@ export const updateProfile = async (profileData) => {
 // User endpoints
 export const reportLostItem = async (itemData) => {
   try {
+    // Check if the request contains images
+    const hasImages = itemData.images && itemData.images.length > 0;
+    
     const response = await fetch(`${API_BASE_URL}/api/user/report-lost`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -111,6 +114,9 @@ export const reportLostItem = async (itemData) => {
 
 export const reportFoundItem = async (itemData) => {
   try {
+    // Check if the request contains images
+    const hasImages = itemData.images && itemData.images.length > 0;
+    
     const response = await fetch(`${API_BASE_URL}/api/user/report-found`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -135,6 +141,9 @@ export const getUserReports = async () => {
 
 export const searchItems = async (searchData) => {
   try {
+    // Check if the request contains images
+    const hasImages = searchData.images && searchData.images.length > 0;
+    
     const response = await fetch(`${API_BASE_URL}/api/user/search`, {
       method: 'POST',
       headers: getAuthHeaders(),
