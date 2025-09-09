@@ -84,32 +84,170 @@ export default function SearchItems(){
       return;
     }
   }, [searchText]);
+  
+  // Check for claimed items when search results change
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      // Get claimed items from localStorage
+      const claimedItems = JSON.parse(localStorage.getItem('claimedItems') || '[]');
+      
+      // Update search results to mark items as claimed if they're in localStorage
+      if (claimedItems.length > 0) {
+        setSearchResults(prev => 
+          prev.map(item => 
+            claimedItems.includes(item.id) ? { ...item, status: 'claimed' } : item
+          )
+        );
+      }
+    }
+  }, [searchResults.length]);
+
+  const runVoiceSearch = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      
+      // Prepare search parameters
+      const searchParams = {
+        query: searchText.trim(),
+        category: selectedCategories[0] || null,
+        location: location || null
+      };
+      
+      // Query backend DB search
+      const resp = await searchItems(searchParams);
+      
+      // Map backend results into UI shape
+      const mapped = (resp.results || []).map(r => ({
+        id: `${r.type}-${r.item_id}`,
+        name: r.name,
+        description: r.description || '',
+        category: r.category || 'Other',
+        location: r.location || 'Unknown',
+        date: r.date || '',
+        image: r.image_url || `https://via.placeholder.com/150x150/3b82f6/ffffff?text=${encodeURIComponent(r.category || 'Item')}`,
+        matchScore: r.match_score || 80,
+        imageSimilarity: r.image_similarity || null,
+        metadataSimilarity: r.metadata_similarity || null,
+        nextStep: r.next_step || null,
+        status: r.status === 'available' || r.status === 'active' ? 'available' : 'claimed',
+        hub: r.type === 'found' ? 'Hub' : 'Citizen',
+        distance: 1 + (Math.floor(Math.random() * 9)),
+        type: r.type // Add type property to track if it's 'lost' or 'found'
+      }));
+      
+      // Filter to only show found items when searching for lost items
+      const filteredResults = mapped.filter(item => item.type === "found");
+      
+      setSearchResults(filteredResults);
+    } catch (e) {
+      setError(e.message || 'Voice search failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const runTextSearch = async () => {
     try {
       setError('');
       setLoading(true);
-      // 1) Hit ML text match for relevance suggestions (mocked by backend proxy)
-      await matchText(searchText.trim());
-      // 2) Query backend DB search combining lost/found items
-      const resp = await searchItems({ query: searchText.trim(), category: selectedCategories[0] || null, location: location || null });
+      
+      // Prepare search parameters
+      const searchParams = {
+        query: searchText.trim(),
+        category: selectedCategories[0] || null,
+        location: location || null
+      };
+      
+      // Query backend DB search combining lost/found items
+      const resp = await searchItems(searchParams);
+      
       // Map backend results into UI shape
-      const mapped = (resp.results || []).map((r, idx) => ({
+      const mapped = (resp.results || []).map(r => ({
         id: `${r.type}-${r.item_id}`,
-        item: r.name,
+        name: r.name,
         description: r.description || '',
         category: r.category || 'Other',
         location: r.location || 'Unknown',
-        dateFound: r.date || '',
-        image: 'https://via.placeholder.com/150x150/3b82f6/ffffff?text=Item',
-        similarity: 80 + (idx % 15),
+        date: r.date || '',
+        // Use image URL from backend if available, otherwise use placeholder
+        image: r.image_url || `https://via.placeholder.com/150x150/3b82f6/ffffff?text=${encodeURIComponent(r.name || 'Item')}`,
+        // Use ML scores if available, otherwise use default values
+        matchScore: r.match_score || r.image_similarity || 80,
+        imageSimilarity: r.image_similarity || null,
+        metadataSimilarity: r.metadata_similarity || null,
+        nextStep: r.next_step || null,
         status: r.status === 'available' || r.status === 'active' ? 'available' : 'claimed',
         hub: r.type === 'found' ? 'Hub' : 'Citizen',
-        distance: 1 + (idx % 9)
+        distance: 1 + (Math.floor(Math.random() * 9)),
+        type: r.type // Add type property to track if it's 'lost' or 'found'
       }));
-      setSearchResults(mapped);
+      
+      // Filter to only show found items when searching for lost items
+      const filteredResults = mapped.filter(item => item.type === "found");
+      
+      setSearchResults(filteredResults);
     } catch (e) {
       setError(e.message || 'Search failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const runImageSearch = async () => {
+    if (!uploadedImage) {
+      setError('Please upload an image to search');
+      return;
+    }
+    
+    try {
+      setError('');
+      setLoading(true);
+      
+      // Prepare search parameters with image
+      const searchParams = {
+        item_name: searchText.trim(),
+        category: selectedCategories[0] || null,
+        location: location || null,
+        description: '',
+        date: dateRange.start || '',
+        images: [uploadedImage],
+        item_type: "lost" // We're searching for lost items
+      };
+      
+      // Query backend with image search
+      const resp = await searchItems(searchParams);
+      
+      // Map backend results into UI shape
+      const mapped = (resp.results || []).map(r => ({
+        id: `${r.type}-${r.item_id}`,
+        name: r.name,
+        description: r.description || '',
+        category: r.category || 'Other',
+        location: r.location || 'Unknown',
+        date: r.date || '',
+        // Use image URL from backend if available, otherwise use a placeholder based on category
+        image: r.image_url || `https://via.placeholder.com/150x150/3b82f6/ffffff?text=${encodeURIComponent(r.category || 'Item')}`,
+        // Use ML scores if available
+        matchScore: r.match_score || 80,
+        imageSimilarity: r.image_similarity || null,
+        metadataSimilarity: r.metadata_similarity || null,
+        nextStep: r.next_step || null,
+        status: r.status === 'available' || r.status === 'active' ? 'available' : 'claimed',
+        hub: r.type === 'found' ? 'Hub' : 'Citizen',
+        distance: 1 + (Math.floor(Math.random() * 9)),
+        matchFound: resp.match_found || false,
+        bestMatchScore: resp.best_match_score || 0,
+        searchMethod: resp.search_method || 'database',
+        type: r.type // Add type property to track if it's 'lost' or 'found'
+      }));
+      
+      // Filter to only show found items when searching for lost items
+      const filteredResults = mapped.filter(item => item.type === "found");
+      
+      setSearchResults(filteredResults);
+    } catch (e) {
+      setError(e.message || 'Image search failed');
     } finally {
       setLoading(false);
     }
@@ -134,12 +272,61 @@ export default function SearchItems(){
 
   const handleVoiceRecord = () => {
     setIsRecording(!isRecording);
+    setError('');
+    
     if (!isRecording) {
-      // Simulate voice recording
-      setTimeout(() => {
-        setSearchText('iPhone 12 lost in Central Park');
+      // Check if browser supports speech recognition
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        setError('Voice search is not supported in your browser. Please try Chrome or Edge.');
         setIsRecording(false);
-      }, 3000);
+        return;
+      }
+      
+      try {
+        // Initialize speech recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        
+        recognition.onstart = () => {
+          console.log('Voice recognition started');
+          // Clear previous search text when starting new recording
+          setSearchText('');
+        };
+        
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          setSearchText(transcript);
+          console.log('Voice transcript:', transcript);
+          
+          // Automatically run search after voice input
+          setTimeout(() => {
+            runTextSearch();
+          }, 500);
+        };
+        
+        recognition.onerror = (event) => {
+          console.error('Voice recognition error:', event.error);
+          setError(`Voice recognition error: ${event.error}`);
+          setIsRecording(false);
+        };
+        
+        recognition.onend = () => {
+          console.log('Voice recognition ended');
+          setIsRecording(false);
+        };
+        
+        // Start recognition
+        recognition.start();
+      } catch (error) {
+        console.error('Voice recognition setup error:', error);
+        setError('Failed to start voice recognition. Please try again.');
+        setIsRecording(false);
+      }
     }
   };
 
@@ -151,9 +338,28 @@ export default function SearchItems(){
       if (!item_id || !['lost','found'].includes(item_type)) {
         throw new Error('Invalid item to claim');
       }
-      await claimItem({ item_id, item_type });
-      // Optimistically update UI
-      setSearchResults(prev => prev.map(it => it.id === compoundId ? { ...it, status: 'claimed' } : it));
+      
+      // Call the API to claim the item
+      const response = await claimItem({ item_id, item_type });
+      
+      if (response.ok) {
+        // Show success message
+        alert(`Item claimed successfully! Your claim is now pending approval from the hub.`);
+        
+        // Optimistically update UI to show the item as pending claim
+        setSearchResults(prev => prev.map(it => 
+          it.id === compoundId ? { ...it, status: 'pending_claim' } : it
+        ));
+        
+        // Store claimed items in localStorage to persist across refreshes
+        const claimedItems = JSON.parse(localStorage.getItem('claimedItems') || '[]');
+        if (!claimedItems.includes(compoundId)) {
+          claimedItems.push(compoundId);
+          localStorage.setItem('claimedItems', JSON.stringify(claimedItems));
+        }
+      } else {
+        throw new Error(response.error || 'Failed to claim item');
+      }
     } catch (e) {
       setError(e.message || 'Failed to create claim');
     }
@@ -161,10 +367,11 @@ export default function SearchItems(){
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'available': return '#10b981';
-      case 'claimed': return '#f59e0b';
-      case 'resolved': return '#3b82f6';
-      default: return '#6b7280';
+      case 'claimed': return '#10b981'; // Green
+      case 'pending_claim': return '#f59e0b'; // Amber/Orange
+      case 'available': return '#3b82f6'; // Blue
+      case 'resolved': return '#3b82f6'; // Blue
+      default: return '#6b7280'; // Gray
     }
   };
 
@@ -176,6 +383,24 @@ export default function SearchItems(){
 
   return (
     <div className="container" style={{marginTop: '24px'}}>
+      <style>
+        {`
+          @keyframes pulse {
+            0% {
+              transform: scale(1);
+              opacity: 1;
+            }
+            50% {
+              transform: scale(1.1);
+              opacity: 0.8;
+            }
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -196,7 +421,7 @@ export default function SearchItems(){
             color: '#6b7280',
             fontSize: '16px'
           }}>
-            Find your lost items using AI-powered search
+            Find your lost items using AI-powered image and text matching
           </p>
         </div>
       </div>
@@ -485,8 +710,13 @@ export default function SearchItems(){
               display: 'flex',
               gap: '12px'
             }}>
-              <button className="btn" style={{background: '#3b82f6', color: 'white'}}>
-                Search by Image
+              <button 
+                onClick={runImageSearch}
+                className="btn" 
+                style={{background: '#3b82f6', color: 'white'}}
+                disabled={!uploadedImage || loading}
+              >
+                {loading ? 'Searching...' : 'Search by Image'}
               </button>
               <button className="btn" style={{background: '#0ea5e9', color: 'white'}}>
                 <FiCamera size={16} />
@@ -502,46 +732,121 @@ export default function SearchItems(){
             display: 'grid',
             gap: '16px'
           }}>
-            <button 
-              className="btn" 
-              style={{
-                background: isRecording ? '#ef4444' : '#3b82f6',
-                color: 'white',
-                padding: '16px',
-                fontSize: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-              onClick={handleVoiceRecord}
-            >
-              <FiMic size={20} />
-              {isRecording ? 'Recording...' : 'Record Voice'}
-            </button>
-            
             <div style={{
-              background: '#f9fafb',
-              padding: '20px',
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb',
-              minHeight: '100px'
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '40px 0'
             }}>
-              {searchText ? (
-                <div>
-                  <div style={{color: '#6b7280', fontSize: '14px', marginBottom: '8px'}}>
-                    Voice-to-text result:
-                  </div>
-                  <div style={{color: '#111827', fontSize: '16px'}}>
+              <button 
+                onClick={handleVoiceRecord}
+                className="btn" 
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  background: isRecording ? '#ef4444' : '#3b82f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <FiMic size={32} color="white" />
+                {isRecording && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(239, 68, 68, 0.2)',
+                    borderRadius: '50%',
+                    animation: 'pulse 1.5s infinite'
+                  }} />
+                )}
+              </button>
+              <p style={{color: isRecording ? '#ef4444' : '#6b7280', fontWeight: isRecording ? '600' : '400'}}>
+                {isRecording ? 'Listening... Speak now' : 'Tap to speak'}
+              </p>
+              {searchText && (
+                <div style={{marginTop: '24px', textAlign: 'center', width: '100%', maxWidth: '500px'}}>
+                  <p style={{fontWeight: '500', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <FiMic size={16} color="#3b82f6" />
+                    I heard:
+                  </p>
+                  <div style={{
+                    fontSize: '18px', 
+                    color: '#111827', 
+                    padding: '12px 16px',
+                    background: '#f9fafb',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}>
                     "{searchText}"
                   </div>
                 </div>
-              ) : (
-                <div style={{color: '#9ca3af', textAlign: 'center'}}>
-                  Your voice-to-text will appear here...
-                </div>
               )}
             </div>
+            
+            {error && (
+              <div style={{
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca',
+                padding: '12px 16px',
+                borderRadius: '8px'
+              }}>
+                {error}
+              </div>
+            )}
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <button 
+                onClick={runTextSearch}
+                className="btn" 
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  padding: '12px 24px',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                }}
+                disabled={loading || !searchText}
+              >
+                {loading ? 'Searching...' : 'Search'}
+              </button>
+            </div>
+            
+            <style jsx>{`
+              @keyframes pulse {
+                0% {
+                  transform: scale(0.95);
+                  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+                }
+                
+                70% {
+                  transform: scale(1);
+                  box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+                }
+                
+                100% {
+                  transform: scale(0.95);
+                  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+                }
+              }
+            `}</style>
           </div>
         )}
       </div>
@@ -579,16 +884,43 @@ export default function SearchItems(){
                   display: 'flex',
                   gap: '20px'
                 }}>
-                  <img 
-                    src={item.image} 
-                    alt={item.item}
-                    style={{
-                      width: '120px',
-                      height: '120px',
-                      borderRadius: '8px',
-                      objectFit: 'cover'
-                    }}
-                  />
+                  <div style={{
+                    width: '150px',
+                    height: '150px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    position: 'relative'
+                  }}>
+                    <img 
+                      src={item.image} 
+                      alt={item.name || 'Found item'}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '8px'
+                      }}
+                      onError={(e) => {
+                        // If image fails to load, replace with a category-based placeholder
+                        e.target.onerror = null;
+                        e.target.src = `https://via.placeholder.com/150x150/3b82f6/ffffff?text=${encodeURIComponent(item.category || 'Item')}`;
+                      }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '0',
+                      left: '0',
+                      right: '0',
+                      background: 'rgba(0,0,0,0.6)',
+                      color: 'white',
+                      padding: '4px 8px',
+                      fontSize: '12px',
+                      textAlign: 'center'
+                    }}>
+                      {item.type === 'found' ? 'Found Item' : 'Lost Item'}
+                    </div>
+                  </div>
                   
                   <div style={{flex: 1}}>
                     <div style={{
@@ -604,7 +936,7 @@ export default function SearchItems(){
                           color: '#111827',
                           marginBottom: '4px'
                         }}>
-                          {item.item}
+                          {item.name}
                         </h4>
                         <p style={{
                           fontSize: '14px',
@@ -627,17 +959,17 @@ export default function SearchItems(){
                           color: getStatusColor(item.status),
                           fontWeight: '500'
                         }}>
-                          {item.status}
+                          {item.status === 'pending_claim' ? 'Pending Approval' : item.status}
                         </span>
                         <span style={{
                           fontSize: '12px',
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          background: getSimilarityColor(item.similarity) + '20',
-                          color: getSimilarityColor(item.similarity),
+                          background: getSimilarityColor(item.matchScore) + '20',
+                          color: getSimilarityColor(item.matchScore),
                           fontWeight: '500'
                         }}>
-                          {item.similarity}% match
+                          {item.matchScore}% match
                         </span>
                       </div>
                     </div>
@@ -660,11 +992,11 @@ export default function SearchItems(){
                       </div>
                       <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
                         <FiCalendar size={14} />
-                        <span>Found: {item.dateFound}</span>
+                        <span>Found: {item.date}</span>
                       </div>
                       <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
                         <FiMapPin size={14} />
-                        <span>{item.distance} km away</span>
+                        <span>{item.distance || '2'} km away</span>
                       </div>
                     </div>
                     

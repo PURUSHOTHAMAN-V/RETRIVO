@@ -286,19 +286,54 @@ app.post('/api/auth/refresh', (_req, res) => res.status(501).json({ message: 'No
 // User endpoints (protected)
 app.post('/api/user/report-lost', authenticateToken, async (req, res) => {
   try {
-    const { name, category, description, location, date_lost } = req.body || {};
+    const { name, category, description, location, date_lost, images } = req.body || {};
     const userId = req.user.sub;
     
     if (!name || !description) {
       return res.status(400).json({ ok: false, error: 'Name and description are required' });
     }
     
+    // Insert into database
     const result = await pool.query(
       'INSERT INTO lost_items(user_id, name, category, description, location, date_lost) VALUES($1, $2, $3, $4, $5, $6) RETURNING item_id, name, category, description, location, date_lost, status, created_at',
       [userId, name, category || null, description, location || null, date_lost || null]
     );
     
-    res.status(201).json({ ok: true, item: result.rows[0] });
+    const item = result.rows[0];
+    
+    // Store item in ML service for future matching
+    try {
+      const mlResponse = await fetch(`${process.env.ML_SERVICE_URL || 'http://localhost:8000'}/store-item`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          item_id: item.item_id,
+          item_type: 'lost',
+          item_name: name,
+          category,
+          description,
+          location,
+          date: date_lost,
+          image: images && images.length > 0 ? images[0] : null
+        })
+      });
+      
+      const mlData = await mlResponse.json();
+      if (!mlData.ok) {
+        console.warn('ML service warning:', mlData);
+      } else {
+        console.log('Item stored in ML service:', mlData);
+      }
+    } catch (mlErr) {
+      // Don't fail the request if ML service is down
+      console.error('ML service error:', mlErr);
+    }
+    
+    res.status(201).json({ 
+      ok: true, 
+      item,
+      available_for_matching: true
+    });
   } catch (err) {
     console.error('Report lost item error:', err);
     res.status(500).json({ ok: false, error: 'Failed to report lost item' });
@@ -307,19 +342,54 @@ app.post('/api/user/report-lost', authenticateToken, async (req, res) => {
 
 app.post('/api/user/report-found', authenticateToken, async (req, res) => {
   try {
-    const { name, category, description, location, date_found } = req.body || {};
+    const { name, category, description, location, date_found, images } = req.body || {};
     const userId = req.user.sub;
     
     if (!name || !description) {
       return res.status(400).json({ ok: false, error: 'Name and description are required' });
     }
     
+    // Insert into database
     const result = await pool.query(
       'INSERT INTO found_items(user_id, name, category, description, location, date_found) VALUES($1, $2, $3, $4, $5, $6) RETURNING item_id, name, category, description, location, date_found, status, created_at',
       [userId, name, category || null, description, location || null, date_found || null]
     );
     
-    res.status(201).json({ ok: true, item: result.rows[0] });
+    const item = result.rows[0];
+    
+    // Store item in ML service for future matching
+    try {
+      const mlResponse = await fetch(`${process.env.ML_SERVICE_URL || 'http://localhost:8000'}/store-item`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          item_id: item.item_id,
+          item_type: 'found',
+          item_name: name,
+          category,
+          description,
+          location,
+          date: date_found,
+          image: images && images.length > 0 ? images[0] : null
+        })
+      });
+      
+      const mlData = await mlResponse.json();
+      if (!mlData.ok) {
+        console.warn('ML service warning:', mlData);
+      } else {
+        console.log('Item stored in ML service:', mlData);
+      }
+    } catch (mlErr) {
+      // Don't fail the request if ML service is down
+      console.error('ML service error:', mlErr);
+    }
+    
+    res.status(201).json({ 
+      ok: true, 
+      item,
+      available_for_matching: true
+    });
   } catch (err) {
     console.error('Report found item error:', err);
     res.status(500).json({ ok: false, error: 'Failed to report found item' });
@@ -348,24 +418,88 @@ app.get('/api/user/reports', authenticateToken, async (req, res) => {
 
 app.post('/api/user/search', authenticateToken, async (req, res) => {
   try {
-    const { query, category, location } = req.body || {};
+    const { query, category, location, item_name, description, date, images } = req.body || {};
+    const userId = req.user.sub;
     
-    if (!query) {
-      return res.status(400).json({ ok: false, error: 'Search query is required' });
+    // If we have images or detailed metadata, use ML service for advanced matching
+    if (images && images.length > 0) {
+      try {
+        // Call ML service for image matching
+        const mlResponse = await fetch(`${process.env.ML_SERVICE_URL || 'http://localhost:8000'}/match-item`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            item_type: 'lost',  // We're searching for a lost item
+            item_name: item_name || query,
+            category,
+            description,
+            location,
+            date,
+            image: images[0]
+          })
+        });
+        
+        const mlData = await mlResponse.json();
+        if (!mlData.ok) {
+          console.warn('ML service warning:', mlData);
+          // Fall back to database search
+        } else {
+          // Process ML results
+          const mlResults = mlData.results || [];
+          
+          // Fetch full item details from database for the matched items
+          if (mlResults.length > 0) {
+            const itemIds = mlResults.map(r => r.item_id);
+            const dbResults = await pool.query(`
+              SELECT 'found' as type, item_id, name, category, description, location, date_found as date, status, created_at
+              FROM found_items 
+              WHERE item_id = ANY($1) AND status = 'available'
+            `, [itemIds]);
+            
+            // Combine ML scores with database results
+            const enhancedResults = dbResults.rows.map(dbItem => {
+              const mlItem = mlResults.find(r => r.item_id === dbItem.item_id);
+              return {
+                ...dbItem,
+                match_score: mlItem ? mlItem.match_score : 0,
+                image_similarity: mlItem ? mlItem.image_similarity : 0,
+                metadata_similarity: mlItem ? mlItem.metadata_similarity : 0,
+                next_step: mlItem ? mlItem.next_step : 'reject'
+              };
+            });
+            
+            return res.json({ 
+              ok: true, 
+              results: enhancedResults,
+              match_found: enhancedResults.length > 0,
+              best_match_score: enhancedResults.length > 0 ? enhancedResults[0].match_score : 0,
+              search_method: 'ml_service'
+            });
+          }
+        }
+      } catch (mlErr) {
+        console.error('ML service error:', mlErr);
+        // Fall back to database search
+      }
+    }
+    
+    // Traditional database search as fallback
+    if (!query && !category && !location) {
+      return res.status(400).json({ ok: false, error: 'Search query, category, or location is required' });
     }
     
     // Search in both lost and found items
     const searchQuery = `
       SELECT 'lost' as type, item_id, name, category, description, location, date_lost as date, status, created_at
       FROM lost_items 
-      WHERE (name ILIKE $1 OR description ILIKE $1) 
+      WHERE (name ILIKE $1 OR description ILIKE $1 OR $1 IS NULL) 
         AND ($2::text IS NULL OR category = $2)
         AND ($3::text IS NULL OR location ILIKE $3)
         AND status = 'active'
       UNION ALL
       SELECT 'found' as type, item_id, name, category, description, location, date_found as date, status, created_at
       FROM found_items 
-      WHERE (name ILIKE $1 OR description ILIKE $1) 
+      WHERE (name ILIKE $1 OR description ILIKE $1 OR $1 IS NULL) 
         AND ($2::text IS NULL OR category = $2)
         AND ($3::text IS NULL OR location ILIKE $3)
         AND status = 'available'
@@ -374,12 +508,16 @@ app.post('/api/user/search', authenticateToken, async (req, res) => {
     `;
     
     const result = await pool.query(searchQuery, [
-      `%${query}%`, 
+      query ? `%${query}%` : null, 
       category || null, 
-      location || null
+      location ? `%${location}%` : null
     ]);
     
-    res.json({ ok: true, results: result.rows });
+    res.json({ 
+      ok: true, 
+      results: result.rows,
+      search_method: 'database'
+    });
   } catch (err) {
     console.error('Search error:', err);
     res.status(500).json({ ok: false, error: 'Search failed' });
@@ -387,6 +525,7 @@ app.post('/api/user/search', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/user/claim', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
   try {
     const { item_id, item_type } = req.body || {};
     const userId = req.user.sub;
@@ -399,15 +538,56 @@ app.post('/api/user/claim', authenticateToken, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid item type' });
     }
     
-    const result = await pool.query(
+    await client.query('BEGIN');
+    
+    // First, check if the item is available for claiming
+    let itemStatus;
+    if (item_type === 'found') {
+      const itemResult = await client.query('SELECT status FROM found_items WHERE item_id = $1', [item_id]);
+      if (itemResult.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ ok: false, error: 'Item not found' });
+      }
+      itemStatus = itemResult.rows[0].status;
+      
+      if (itemStatus !== 'available') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ ok: false, error: 'Item is not available for claiming' });
+      }
+      
+      // Update the item status to 'pending_claim'
+      await client.query("UPDATE found_items SET status = 'pending_claim' WHERE item_id = $1", [item_id]);
+    } else if (item_type === 'lost') {
+      const itemResult = await client.query('SELECT status FROM lost_items WHERE item_id = $1', [item_id]);
+      if (itemResult.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ ok: false, error: 'Item not found' });
+      }
+      itemStatus = itemResult.rows[0].status;
+      
+      if (itemStatus !== 'active') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ ok: false, error: 'Item is not available for claiming' });
+      }
+      
+      // Update the item status to 'pending_claim'
+      await client.query("UPDATE lost_items SET status = 'pending_claim' WHERE item_id = $1", [item_id]);
+    }
+    
+    // Create the claim
+    const result = await client.query(
       'INSERT INTO claims(user_id, item_id, item_type, status) VALUES($1, $2, $3, $4) RETURNING claim_id, user_id, item_id, item_type, status, created_at',
       [userId, item_id, item_type, 'pending']
     );
     
+    await client.query('COMMIT');
     res.status(201).json({ ok: true, claim: result.rows[0] });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Claim error:', err);
     res.status(500).json({ ok: false, error: 'Failed to create claim' });
+  } finally {
+    client.release();
   }
 });
 

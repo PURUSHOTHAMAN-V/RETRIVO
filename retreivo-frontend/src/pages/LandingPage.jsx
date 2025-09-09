@@ -198,11 +198,11 @@ export default function LandingPage() {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
           gap: '24px',
-          '@media (max-width: 768px)': {
+          '@media (maxWidth: 768px)': {
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '20px'
           },
-          '@media(maxWidth: 480px)': {
+          '@media (maxWidth: 480px)': {
             gridTemplateColumns: '1fr',
             gap: '16px'
           }
