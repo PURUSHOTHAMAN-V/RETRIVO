@@ -68,25 +68,12 @@ export default function ReportFound() {
     setError('');
     setLoading(true);
     try {
-      // Convert uploaded images to base64 strings
-      const imagePromises = uploadedImages.map(img => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(img.file);
-        });
-      });
-      
-      const base64Images = await Promise.all(imagePromises);
-      
       await reportFoundItem({
         name: formData.itemName,
         category: formData.category,
         description: formData.description,
         location: formData.location,
-        date_found: formData.dateFound,
-        images: base64Images // Include images for ML service matching
+        date_found: formData.dateFound
       });
       setSuccess(true);
       setTimeout(() => {

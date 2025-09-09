@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
 
 // Helper function to get auth headers
 const getAuthHeaders = (isMultipart = false) => {
@@ -168,30 +168,6 @@ export const claimItem = async (claimData) => {
   }
 };
 
-// Hub endpoints
-export const getHubClaims = async (status = 'pending') => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/hub/claims?status=${status}`, {
-      headers: getAuthHeaders()
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const approveHubClaim = async (claimId) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/hub/claim/${claimId}/approve`, {
-      method: 'PUT',
-      headers: getAuthHeaders()
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    throw error;
-  }
-};
-
 export const getUserRewards = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/user/rewards`, {
@@ -220,6 +196,30 @@ export const sendChatMessage = async (message) => {
 export const getChatHistory = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/chat/history`, {
+      headers: getAuthHeaders()
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Hub endpoints
+export const getHubClaims = async (hubId, status = 'pending') => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/hub/claims?hubId=${hubId}&status=${status}`, {
+      headers: getAuthHeaders()
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const approveClaimItem = async (claimId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/hub/claim/${claimId}/approve`, {
+      method: 'PUT',
       headers: getAuthHeaders()
     });
     return await handleResponse(response);

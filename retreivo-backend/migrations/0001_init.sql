@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS hubs (
 CREATE TABLE IF NOT EXISTS lost_items (
     item_id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(user_id),
+    hub_id INTEGER REFERENCES hubs(hub_id),
     name VARCHAR(200) NOT NULL,
     category VARCHAR(50),
     description TEXT,

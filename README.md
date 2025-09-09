@@ -20,11 +20,18 @@ Services:
 Database URL used by backend (note URL-encoded `@`):
 
 ```
-postgresql://postgres:Vpcare%4024x7@db:5432/retreivo
+postgresql://postgres:9894guha@db:5432/retreivo
 ```
 
 ## Migrations
 
 SQL files live under `retreivo-backend/migrations`. They auto-apply on first DB start via docker-compose volume mapping. To re-run manually, use `psql` against the container.
 
+
+postgres start:
+psql -U postgres -d postgres
+
+for ml virtual environment:
+python -m venv venv
+venv\Scripts\Activate
 

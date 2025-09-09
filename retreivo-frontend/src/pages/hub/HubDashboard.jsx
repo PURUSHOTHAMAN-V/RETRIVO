@@ -23,14 +23,22 @@ export default function HubDashboard() {
   const fetchClaimStats = async () => {
     try {
       setLoading(true);
+      
+      // Check if hub exists and has an id
+      if (!hub || !hub.id) {
+        console.error('Hub information not available');
+        setLoading(false);
+        return;
+      }
+      
       // Fetch pending claims
-      const pendingResponse = await getHubClaims('pending');
+      const pendingResponse = await getHubClaims(hub.id, 'pending');
       // Fetch approved claims
-      const approvedResponse = await getHubClaims('approved');
+      const approvedResponse = await getHubClaims(hub.id, 'approved');
       
       if (pendingResponse.ok && approvedResponse.ok) {
-        const pendingCount = pendingResponse.claims.length;
-        const resolvedCount = approvedResponse.claims.length;
+        const pendingCount = pendingResponse.claims ? pendingResponse.claims.length : 0;
+        const resolvedCount = approvedResponse.claims ? approvedResponse.claims.length : 0;
         const totalCount = pendingCount + resolvedCount;
         
         setStats({

@@ -1,696 +1,174 @@
-import React, { useState, useEffect } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
-import { FiSearch, FiFilter, FiEye, FiCheck, FiX, FiClock, FiAlertTriangle, FiUser, FiMapPin, FiCalendar } from 'react-icons/fi'
-import { getHubClaims, approveHubClaim } from '../../services/api'
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { FiSearch, FiFilter, FiEye, FiCheck, FiX, FiClock, FiAlertTriangle, FiUser, FiMapPin, FiCalendar } from 'react-icons/fi';
+import { getHubClaims, approveClaimItem } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 export default function ClaimsManagement() {
-  const { hub } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
-  const [selectedClaim, setSelectedClaim] = useState(null);
+  const { hub, isHubAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [claims, setClaims] = useState([]);
+  const [filteredClaims, setFilteredClaims] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
+  const [error, setError] = useState('');
+
   useEffect(() => {
-    fetchClaims();
-  }, []);
-  
-  const fetchClaims = async () => {
-    try {
+    if (!isHubAuthenticated) navigate('/hub/login');
+  }, [isHubAuthenticated, navigate]);
+
+  useEffect(() => {
+    const fetchClaims = async () => {
       setLoading(true);
-      const response = await getHubClaims();
-      if (response.ok) {
-        // Transform the API response to match our component's expected format
+      setError('');
+      try {
+        if (!hub || !hub.id) throw new Error('Hub information not available');
+        const response = await getHubClaims(hub.id);
+        if (!response.ok) throw new Error(response.error || 'Failed to fetch claims');
+        if (!response.claims || !Array.isArray(response.claims)) throw new Error('Invalid claims data format');
+
         const formattedClaims = response.claims.map(claim => ({
           id: claim.claim_id,
-          item: claim.item_name,
-          claimant: claim.claimer_user_id, // This would ideally be a name, not ID
-          claimantEmail: 'user@example.com', // Placeholder
-          claimantPhone: '+91 98765 43210', // Placeholder
-          dateClaimed: new Date(claim.created_at).toISOString().split('T')[0],
-          dateLost: new Date(claim.created_at).toISOString().split('T')[0], // Placeholder
-          location: claim.item_location || 'Unknown',
-          description: claim.item_description || 'No description',
-          status: claim.status,
-          priority: claim.item_type === 'found' ? 'high' : 'medium', // Placeholder logic
-          fraudScore: Math.floor(Math.random() * 100), // Placeholder
-          documents: [], // Placeholder
-          images: [], // Placeholder
-          // Store the original claim data for reference
-          originalClaim: claim
+          itemName: claim.item_name || 'Unknown Item',
+          category: claim.category || 'Uncategorized',
+          location: claim.item_location || 'Unknown Location',
+          date: claim.date ? new Date(claim.date).toLocaleDateString() : 'Unknown Date',
+          description: claim.item_description || 'No description available',
+          status: claim.status || 'pending',
+          claimDate: claim.created_at ? new Date(claim.created_at).toLocaleDateString() : 'Unknown Date',
+          claimant: {
+            name: 'User ID: ' + claim.claimer_user_id,
+            email: 'Contact hub for details',
+            phone: 'Contact hub for details'
+          }
         }));
+
         setClaims(formattedClaims);
-      } else {
-        setError('Failed to fetch claims');
+        setFilteredClaims(formattedClaims);
+      } catch (err) {
+        setError(`Failed to load claims. ${err.message || 'Please try again later.'}`);
+        setClaims([]);
+        setFilteredClaims([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error fetching claims:', err);
-      setError('Failed to fetch claims: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  // Fallback mock data in case API fails
-  const mockClaims = [
-    {
-      id: 1,
-      item: 'iPhone 12',
-      claimant: 'John Doe',
-      claimantEmail: 'john.doe@email.com',
-      claimantPhone: '+91 98765 43210',
-      dateClaimed: '2024-01-15',
-      dateLost: '2024-01-10',
-      location: 'Central Park, Mumbai',
-      description: 'Black iPhone 12 with red case, found near the fountain',
-      status: 'pending',
-      priority: 'high',
-      fraudScore: 15,
-      documents: ['id_proof.pdf', 'purchase_receipt.pdf'],
-      images: ['item_photo1.jpg', 'item_photo2.jpg']
-    },
-    {
-      id: 2,
-      item: 'Leather Wallet',
-      claimant: 'Jane Smith',
-      claimantEmail: 'jane.smith@email.com',
-      claimantPhone: '+91 98765 43211',
-      dateClaimed: '2024-01-14',
-      dateLost: '2024-01-12',
-      location: 'Shopping Mall, Andheri',
-      description: 'Brown leather wallet with credit cards and ID',
-      status: 'approved',
-      priority: 'medium',
-      fraudScore: 8,
-      documents: ['id_proof.pdf'],
-      images: ['item_photo3.jpg']
-    },
-    {
-      id: 3,
-      item: 'Car Keys',
-      claimant: 'David Brown',
-      claimantEmail: 'david.brown@email.com',
-      claimantPhone: '+91 98765 43212',
-      dateClaimed: '2024-01-13',
-      dateLost: '2024-01-11',
-      location: 'Parking Lot, Bandra',
-      description: 'Toyota car keys with keychain',
-      status: 'pending',
-      priority: 'high',
-      fraudScore: 25,
-      documents: ['vehicle_registration.pdf', 'driving_license.pdf'],
-      images: ['item_photo4.jpg']
-    },
-    {
-      id: 4,
-      item: 'Laptop Bag',
-      claimant: 'Sarah Wilson',
-      claimantEmail: 'sarah.wilson@email.com',
-      claimantPhone: '+91 98765 43213',
-      dateClaimed: '2024-01-12',
-      dateLost: '2024-01-09',
-      location: 'Coffee Shop, Colaba',
-      description: 'Black laptop bag with Dell laptop inside',
-      status: 'resolved',
-      priority: 'high',
-      fraudScore: 5,
-      documents: ['laptop_receipt.pdf'],
-      images: ['item_photo5.jpg']
-    },
-    {
-      id: 5,
-      item: 'Gold Watch',
-      claimant: 'Mike Johnson',
-      claimantEmail: 'mike.johnson@email.com',
-      claimantPhone: '+91 98765 43214',
-      dateClaimed: '2024-01-11',
-      dateLost: '2024-01-08',
-      location: 'Restaurant, Juhu',
-      description: 'Gold Rolex watch with leather strap',
-      status: 'flagged',
-      priority: 'high',
-      fraudScore: 85,
-      documents: ['watch_receipt.pdf'],
-      images: ['item_photo6.jpg']
-    }
-  ];
+    if (isHubAuthenticated && hub) fetchClaims();
+  }, [hub, isHubAuthenticated]);
 
-  const filteredClaims = (claims.length > 0 ? claims : mockClaims).filter(claim => {
-    const matchesSearch = claim.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         claim.claimant.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || claim.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || claim.priority === priorityFilter;
-    
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
+  useEffect(() => {
+    const filtered = claims.filter(claim => {
+      const matchesSearch =
+        claim.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        claim.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        claim.claimant.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = filterStatus === 'all' || claim.status === filterStatus;
+      return matchesSearch && matchesFilter;
+    });
+    setFilteredClaims(filtered);
+  }, [searchTerm, filterStatus, claims]);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'approved': return '#10b981';
-      case 'pending': return '#f59e0b';
-      case 'flagged': return '#ef4444';
-      case 'resolved': return '#3b82f6';
-      case 'rejected': return '#6b7280';
-      default: return '#6b7280';
-    }
-  };
+  const handleSearch = e => setSearchTerm(e.target.value);
+  const handleFilterChange = status => setFilterStatus(status);
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return '#ef4444';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#10b981';
-      default: return '#6b7280';
-    }
-  };
-
-  const getFraudScoreColor = (score) => {
-    if (score < 20) return '#10b981';
-    if (score < 50) return '#f59e0b';
-    return '#ef4444';
-  };
-
-  const handleApprove = async (claimId) => {
+  const handleApprove = async claimId => {
     try {
-      const response = await approveHubClaim(claimId);
-      if (response.ok) {
-        // Update the local state to reflect the change
-        setClaims(prevClaims => 
-          prevClaims.map(claim => 
-            claim.id === claimId ? { ...claim, status: 'approved' } : claim
-          )
-        );
-        alert('Claim approved successfully!');
-      } else {
-        alert('Failed to approve claim: ' + response.error);
-      }
+      setError('');
+      setClaims(prev => prev.map(c => (c.id === claimId ? { ...c, status: 'approved' } : c)));
+      setFilteredClaims(prev => prev.map(c => (c.id === claimId ? { ...c, status: 'approved' } : c)));
+      const response = await approveClaimItem(claimId);
+      if (!response.ok) throw new Error(response.error || 'Failed to approve claim');
+      alert('Claim approved successfully. The user has been notified.');
     } catch (err) {
-      console.error('Error approving claim:', err);
-      alert('Failed to approve claim: ' + err.message);
+      setError(`Failed to approve claim. ${err.message || 'Please try again.'}`);
+      setClaims(prev => prev.map(c => (c.id === claimId ? { ...c, status: 'pending' } : c)));
+      setFilteredClaims(prev => prev.map(c => (c.id === claimId ? { ...c, status: 'pending' } : c)));
     }
   };
 
-  const handleReject = (claimId) => {
-    // For now, just update the UI since we don't have a reject endpoint
-    setClaims(prevClaims => 
-      prevClaims.map(claim => 
-        claim.id === claimId ? { ...claim, status: 'rejected' } : claim
-      )
-    );
-    alert('Claim rejected!');
+  const handleReject = async claimId => {
+    setClaims(prev => prev.map(c => (c.id === claimId ? { ...c, status: 'rejected' } : c)));
+    setFilteredClaims(prev => prev.map(c => (c.id === claimId ? { ...c, status: 'rejected' } : c)));
   };
 
-  const handleViewDetails = (claim) => {
-    setSelectedClaim(claim);
+  const getStatusBadge = status => {
+    const baseStyle = { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: '999px', fontSize: '0.75rem', fontWeight: '500' };
+    switch (status) {
+      case 'pending':
+        return <span style={{ ...baseStyle, backgroundColor: '#FEF3C7', color: '#B45309' }}><FiClock style={{ marginRight: '4px' }} /> Pending</span>;
+      case 'approved':
+        return <span style={{ ...baseStyle, backgroundColor: '#DCFCE7', color: '#166534' }}><FiCheck style={{ marginRight: '4px' }} /> Approved</span>;
+      case 'rejected':
+        return <span style={{ ...baseStyle, backgroundColor: '#FEE2E2', color: '#991B1B' }}><FiX style={{ marginRight: '4px' }} /> Rejected</span>;
+      default:
+        return <span style={{ ...baseStyle, backgroundColor: '#E5E7EB', color: '#374151' }}><FiAlertTriangle style={{ marginRight: '4px' }} /> Unknown</span>;
+    }
   };
+
+  const containerStyle = { maxWidth: '1200px', margin: '0 auto', padding: '2rem', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' };
+  const headingStyle = { fontSize: '2rem', fontWeight: '700', marginBottom: '1.5rem', color: '#111827' };
+  const searchContainer = { position: 'relative', width: '100%', maxWidth: '300px', marginBottom: '1rem' };
+  const searchInput = { width: '100%', padding: '8px 12px 8px 32px', borderRadius: '0.5rem', border: '1px solid #D1D5DB', outline: 'none', fontSize: '1rem' };
+  const searchIconStyle = { position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' };
+  const filterButtonStyle = (active) => ({
+    padding: '6px 12px',
+    borderRadius: '0.5rem',
+    border: 'none',
+    cursor: 'pointer',
+    backgroundColor: active ? '#3B82F6' : '#E5E7EB',
+    color: active ? '#fff' : '#111827',
+    fontWeight: '500',
+    marginRight: '0.5rem'
+  });
+  const cardStyle = { backgroundColor: '#fff', borderRadius: '0.75rem', boxShadow: '0 4px 8px rgba(0,0,0,0.05)', padding: '1.5rem', marginBottom: '1rem' };
+  const cardHeaderStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' };
 
   return (
-    <div className="container" style={{marginTop: '24px'}}>
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '32px'
-      }}>
+    <div style={containerStyle}>
+      <h1 style={headingStyle}>Claims Management</h1>
+      {error && <div style={{ backgroundColor: '#FEE2E2', borderLeft: '4px solid #EF4444', color: '#B91C1C', padding: '1rem', marginBottom: '1rem', borderRadius: '0.5rem' }}>{error}</div>}
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={searchContainer}>
+          <FiSearch style={searchIconStyle} />
+          <input type="text" placeholder="Search claims..." style={searchInput} value={searchTerm} onChange={handleSearch} />
+        </div>
         <div>
-          <h1 style={{
-            fontSize: '32px',
-            fontWeight: '700',
-            color: '#111827',
-            marginBottom: '8px'
-          }}>
-            Claims Management
-          </h1>
-          <p style={{
-            color: '#6b7280',
-            fontSize: '16px'
-          }}>
-            Review and manage item claims for {hub?.name}
-          </p>
-        </div>
-        <div style={{
-          display: 'flex',
-          gap: '12px'
-        }}>
-          <button className="btn" style={{
-            background: '#111827',
-            color: 'white'
-          }}>
-            Export Report
-          </button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="card" style={{marginBottom: '24px'}}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px'
-        }}>
-          <div style={{position: 'relative'}}>
-            <FiSearch style={{
-              position: 'absolute',
-              left: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#9ca3af'
-            }} />
-            <input 
-              className="input" 
-              placeholder="Search claims..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{paddingLeft: '40px'}}
-            />
-          </div>
-          
-          <select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="input"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="flagged">Flagged</option>
-            <option value="resolved">Resolved</option>
-          </select>
-          
-          <select 
-            value={priorityFilter} 
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            className="input"
-          >
-            <option value="all">All Priority</option>
-            <option value="high">High Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="low">Low Priority</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Claims List */}
-      <div className="card">
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px'
-        }}>
-          <h3 style={{
-            fontSize: '20px',
-            fontWeight: '600',
-            color: '#111827'
-          }}>
-            Claims ({filteredClaims.length})
-          </h3>
-        </div>
-        
-        <div style={{
-          display: 'grid',
-          gap: '16px'
-        }}>
-          {filteredClaims.map(claim => (
-            <div key={claim.id} style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: '12px',
-              padding: '20px',
-              background: 'white'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '16px'
-              }}>
-                <div style={{flex: 1}}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '8px'
-                  }}>
-                    <h4 style={{
-                      fontSize: '18px',
-                      fontWeight: '600',
-                      color: '#111827',
-                      margin: 0
-                    }}>
-                      {claim.item}
-                    </h4>
-                    <span style={{
-                      fontSize: '12px',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      background: getStatusColor(claim.status) + '20',
-                      color: getStatusColor(claim.status),
-                      fontWeight: '500'
-                    }}>
-                      {claim.status}
-                    </span>
-                    <span style={{
-                      fontSize: '12px',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      background: getPriorityColor(claim.priority) + '20',
-                      color: getPriorityColor(claim.priority),
-                      fontWeight: '500',
-                      textTransform: 'uppercase'
-                    }}>
-                      {claim.priority}
-                    </span>
-                  </div>
-                  
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '16px',
-                    fontSize: '14px',
-                    color: '#6b7280'
-                  }}>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-                      <FiUser size={14} />
-                      <span>{claim.claimant}</span>
-                    </div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-                      <FiMapPin size={14} />
-                      <span>{claim.location}</span>
-                    </div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-                      <FiCalendar size={14} />
-                      <span>Claimed: {claim.dateClaimed}</span>
-                    </div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-                      <FiAlertTriangle size={14} />
-                      <span>Fraud Score: {claim.fraudScore}%</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div style={{
-                  display: 'flex',
-                  gap: '8px'
-                }}>
-                  <button 
-                    onClick={() => handleViewDetails(claim)}
-                    className="btn" 
-                    style={{
-                      background: '#3b82f6',
-                      color: 'white',
-                      padding: '8px 12px',
-                      fontSize: '14px'
-                    }}
-                  >
-                    <FiEye size={16} />
-                  </button>
-                  
-                  {claim.status === 'pending' && (
-                    <>
-                      <button 
-                        onClick={() => handleApprove(claim.id)}
-                        className="btn" 
-                        style={{
-                          background: '#10b981',
-                          color: 'white',
-                          padding: '8px 12px',
-                          fontSize: '14px'
-                        }}
-                      >
-                        <FiCheck size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleReject(claim.id)}
-                        className="btn" 
-                        style={{
-                          background: '#ef4444',
-                          color: 'white',
-                          padding: '8px 12px',
-                          fontSize: '14px'
-                        }}
-                      >
-                        <FiX size={16} />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              <p style={{
-                fontSize: '14px',
-                color: '#6b7280',
-                margin: 0,
-                lineHeight: '1.5'
-              }}>
-                {claim.description}
-              </p>
-            </div>
+          {['all', 'pending', 'approved', 'rejected'].map(status => (
+            <button key={status} style={filterButtonStyle(filterStatus === status)} onClick={() => handleFilterChange(status)}>
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Claim Details Modal */}
-      {selectedClaim && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '24px'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '32px',
-            maxWidth: '600px',
-            width: '100%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px'
-            }}>
-              <h2 style={{
-                fontSize: '24px',
-                fontWeight: '700',
-                color: '#111827',
-                margin: 0
-              }}>
-                Claim Details
-              </h2>
-              <button 
-                onClick={() => setSelectedClaim(null)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  color: '#6b7280'
-                }}
-              >
-                ×
-              </button>
+      {loading ? <p>Loading claims...</p> : filteredClaims.length === 0 ? <p>No claims found</p> : filteredClaims.map(claim => (
+        <div key={claim.id} style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>{claim.itemName}</h2>
+              <p style={{ color: '#6B7280', marginBottom: '1rem' }}>{claim.description}</p>
             </div>
-            
-            <div style={{
-              display: 'grid',
-              gap: '20px'
-            }}>
-              <div>
-                <h3 style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#111827',
-                  marginBottom: '12px'
-                }}>
-                  Item Information
-                </h3>
-                <div style={{
-                  background: '#f9fafb',
-                  padding: '16px',
-                  borderRadius: '8px'
-                }}>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '12px',
-                    fontSize: '14px'
-                  }}>
-                    <div><strong>Item:</strong> {selectedClaim.item}</div>
-                    <div><strong>Status:</strong> 
-                      <span style={{
-                        color: getStatusColor(selectedClaim.status),
-                        fontWeight: '500',
-                        marginLeft: '8px'
-                      }}>
-                        {selectedClaim.status}
-                      </span>
-                    </div>
-                    <div><strong>Priority:</strong> 
-                      <span style={{
-                        color: getPriorityColor(selectedClaim.priority),
-                        fontWeight: '500',
-                        marginLeft: '8px'
-                      }}>
-                        {selectedClaim.priority}
-                      </span>
-                    </div>
-                    <div><strong>Fraud Score:</strong> 
-                      <span style={{
-                        color: getFraudScoreColor(selectedClaim.fraudScore),
-                        fontWeight: '500',
-                        marginLeft: '8px'
-                      }}>
-                        {selectedClaim.fraudScore}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#111827',
-                  marginBottom: '12px'
-                }}>
-                  Claimant Information
-                </h3>
-                <div style={{
-                  background: '#f9fafb',
-                  padding: '16px',
-                  borderRadius: '8px'
-                }}>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '12px',
-                    fontSize: '14px'
-                  }}>
-                    <div><strong>Name:</strong> {selectedClaim.claimant}</div>
-                    <div><strong>Email:</strong> {selectedClaim.claimantEmail}</div>
-                    <div><strong>Phone:</strong> {selectedClaim.claimantPhone}</div>
-                    <div><strong>Date Lost:</strong> {selectedClaim.dateLost}</div>
-                    <div><strong>Date Claimed:</strong> {selectedClaim.dateClaimed}</div>
-                    <div><strong>Location:</strong> {selectedClaim.location}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#111827',
-                  marginBottom: '12px'
-                }}>
-                  Description
-                </h3>
-                <p style={{
-                  fontSize: '14px',
-                  color: '#6b7280',
-                  lineHeight: '1.6',
-                  margin: 0
-                }}>
-                  {selectedClaim.description}
-                </p>
-              </div>
-              
-              <div>
-                <h3 style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#111827',
-                  marginBottom: '12px'
-                }}>
-                  Documents & Images
-                </h3>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                  gap: '12px'
-                }}>
-                  {selectedClaim.documents.map((doc, index) => (
-                    <div key={index} style={{
-                      padding: '12px',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                      fontSize: '14px',
-                      color: '#3b82f6',
-                      cursor: 'pointer'
-                    }}>
-                      📄 {doc}
-                    </div>
-                  ))}
-                  {selectedClaim.images.map((img, index) => (
-                    <div key={index} style={{
-                      padding: '12px',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                      fontSize: '14px',
-                      color: '#3b82f6',
-                      cursor: 'pointer'
-                    }}>
-                      📷 {img}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {selectedClaim.status === 'pending' && (
-                <div style={{
-                  display: 'flex',
-                  gap: '12px',
-                  justifyContent: 'flex-end'
-                }}>
-                  <button 
-                    onClick={() => handleReject(selectedClaim.id)}
-                    className="btn" 
-                    style={{
-                      background: '#ef4444',
-                      color: 'white'
-                    }}
-                  >
-                    Reject Claim
-                  </button>
-                  <button 
-                    onClick={() => handleApprove(selectedClaim.id)}
-                    className="btn" 
-                    style={{
-                      background: '#10b981',
-                      color: 'white'
-                    }}
-                  >
-                    Approve Claim
-                  </button>
-                </div>
-              )}
-            </div>
+            <div>{getStatusBadge(claim.status)}</div>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FiUser style={{ color: '#9CA3AF' }} /><div><p style={{ fontSize: '0.75rem', color: '#6B7280' }}>Claimant</p><p>{claim.claimant.name}</p><p style={{ fontSize: '0.75rem', color: '#6B7280' }}>{claim.claimant.email}</p><p style={{ fontSize: '0.75rem', color: '#6B7280' }}>{claim.claimant.phone}</p></div></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FiMapPin style={{ color: '#9CA3AF' }} /><div><p style={{ fontSize: '0.75rem', color: '#6B7280' }}>Location Found</p><p>{claim.location}</p></div></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FiCalendar style={{ color: '#9CA3AF' }} /><div><p style={{ fontSize: '0.75rem', color: '#6B7280' }}>Dates</p><p>Found: {claim.date}</p><p>Claimed: {claim.claimDate}</p></div></div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+            <button style={{ padding: '6px 12px', backgroundColor: '#3B82F6', color: '#fff', borderRadius: '0.5rem', border: 'none', display: 'flex', alignItems: 'center', cursor: 'pointer' }}><FiEye style={{ marginRight: '4px' }} />View Details</button>
+            {claim.status === 'pending' && <>
+              <button onClick={() => handleApprove(claim.id)} style={{ padding: '6px 12px', backgroundColor: '#10B981', color: '#fff', borderRadius: '0.5rem', border: 'none', display: 'flex', alignItems: 'center', cursor: 'pointer' }}><FiCheck style={{ marginRight: '4px' }} />Approve</button>
+              <button onClick={() => handleReject(claim.id)} style={{ padding: '6px 12px', backgroundColor: '#EF4444', color: '#fff', borderRadius: '0.5rem', border: 'none', display: 'flex', alignItems: 'center', cursor: 'pointer' }}><FiX style={{ marginRight: '4px' }} />Reject</button>
+            </>}
           </div>
         </div>
-      )}
+      ))}
     </div>
-  )
+  );
 }
-
-
-
-
-
-

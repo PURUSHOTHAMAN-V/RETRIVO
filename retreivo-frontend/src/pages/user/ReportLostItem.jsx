@@ -53,25 +53,12 @@ export default function ReportLostItem() {
     setError('');
     setLoading(true);
     try {
-      // Convert uploaded images to base64 strings
-      const imagePromises = uploadedImages.map(img => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(img.file);
-        });
-      });
-      
-      const base64Images = await Promise.all(imagePromises);
-      
       await reportLostItem({
         name: formData.itemName,
         category: formData.category,
         description: formData.description,
         location: formData.location,
-        date_lost: formData.dateLost,
-        images: base64Images // Include images for ML service matching
+        date_lost: formData.dateLost
       });
       setSuccess(true);
       setTimeout(() => {

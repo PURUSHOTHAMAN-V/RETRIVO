@@ -367,11 +367,11 @@ export default function SearchItems(){
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'claimed': return '#10b981'; // Green
-      case 'pending_claim': return '#f59e0b'; // Amber/Orange
-      case 'available': return '#3b82f6'; // Blue
-      case 'resolved': return '#3b82f6'; // Blue
-      default: return '#6b7280'; // Gray
+      case 'available': return '#10b981';
+      case 'claimed': return '#f59e0b';
+      case 'pending_claim': return '#f59e0b';
+      case 'resolved': return '#3b82f6';
+      default: return '#6b7280';
     }
   };
 

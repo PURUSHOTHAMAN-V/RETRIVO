@@ -7,7 +7,6 @@ import morgan from 'morgan';
 import pkg from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-
 const { Pool } = pkg;
 
 const app = express();
@@ -451,9 +450,10 @@ app.post('/api/user/search', authenticateToken, async (req, res) => {
           if (mlResults.length > 0) {
             const itemIds = mlResults.map(r => r.item_id);
             const dbResults = await pool.query(`
-              SELECT 'found' as type, item_id, name, category, description, location, date_found as date, status, created_at
-              FROM found_items 
-              WHERE item_id = ANY($1) AND status = 'available'
+              SELECT 'found' as type, f.item_id, f.name, f.category, f.description, f.location, f.date_found as date, f.status, f.created_at
+              FROM found_items f
+              LEFT JOIN claims c ON f.item_id = c.item_id AND c.item_type = 'found' AND c.status = 'approved'
+              WHERE f.item_id = ANY($1) AND (f.status = 'available' OR c.claim_id IS NULL)
             `, [itemIds]);
             
             // Combine ML scores with database results
@@ -490,19 +490,21 @@ app.post('/api/user/search', authenticateToken, async (req, res) => {
     
     // Search in both lost and found items
     const searchQuery = `
-      SELECT 'lost' as type, item_id, name, category, description, location, date_lost as date, status, created_at
-      FROM lost_items 
-      WHERE (name ILIKE $1 OR description ILIKE $1 OR $1 IS NULL) 
-        AND ($2::text IS NULL OR category = $2)
-        AND ($3::text IS NULL OR location ILIKE $3)
-        AND status = 'active'
+      SELECT 'lost' as type, l.item_id, l.name, l.category, l.description, l.location, l.date_lost as date, l.status, l.created_at
+      FROM lost_items l
+      LEFT JOIN claims c ON l.item_id = c.item_id AND c.item_type = 'lost' AND c.status = 'approved'
+      WHERE (l.name ILIKE $1 OR l.description ILIKE $1 OR $1 IS NULL) 
+        AND ($2::text IS NULL OR l.category = $2)
+        AND ($3::text IS NULL OR l.location ILIKE $3)
+        AND (l.status = 'active' OR c.claim_id IS NULL)
       UNION ALL
-      SELECT 'found' as type, item_id, name, category, description, location, date_found as date, status, created_at
-      FROM found_items 
-      WHERE (name ILIKE $1 OR description ILIKE $1 OR $1 IS NULL) 
-        AND ($2::text IS NULL OR category = $2)
-        AND ($3::text IS NULL OR location ILIKE $3)
-        AND status = 'available'
+      SELECT 'found' as type, f.item_id, f.name, f.category, f.description, f.location, f.date_found as date, f.status, f.created_at
+      FROM found_items f
+      LEFT JOIN claims c ON f.item_id = c.item_id AND c.item_type = 'found' AND c.status = 'approved'
+      WHERE (f.name ILIKE $1 OR f.description ILIKE $1 OR $1 IS NULL) 
+        AND ($2::text IS NULL OR f.category = $2)
+        AND ($3::text IS NULL OR f.location ILIKE $3)
+        AND (f.status = 'available' OR c.claim_id IS NULL)
       ORDER BY created_at DESC
       LIMIT 20
     `;
@@ -525,7 +527,6 @@ app.post('/api/user/search', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/user/claim', authenticateToken, async (req, res) => {
-  const client = await pool.connect();
   try {
     const { item_id, item_type } = req.body || {};
     const userId = req.user.sub;
@@ -538,56 +539,15 @@ app.post('/api/user/claim', authenticateToken, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid item type' });
     }
     
-    await client.query('BEGIN');
-    
-    // First, check if the item is available for claiming
-    let itemStatus;
-    if (item_type === 'found') {
-      const itemResult = await client.query('SELECT status FROM found_items WHERE item_id = $1', [item_id]);
-      if (itemResult.rowCount === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ ok: false, error: 'Item not found' });
-      }
-      itemStatus = itemResult.rows[0].status;
-      
-      if (itemStatus !== 'available') {
-        await client.query('ROLLBACK');
-        return res.status(400).json({ ok: false, error: 'Item is not available for claiming' });
-      }
-      
-      // Update the item status to 'pending_claim'
-      await client.query("UPDATE found_items SET status = 'pending_claim' WHERE item_id = $1", [item_id]);
-    } else if (item_type === 'lost') {
-      const itemResult = await client.query('SELECT status FROM lost_items WHERE item_id = $1', [item_id]);
-      if (itemResult.rowCount === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ ok: false, error: 'Item not found' });
-      }
-      itemStatus = itemResult.rows[0].status;
-      
-      if (itemStatus !== 'active') {
-        await client.query('ROLLBACK');
-        return res.status(400).json({ ok: false, error: 'Item is not available for claiming' });
-      }
-      
-      // Update the item status to 'pending_claim'
-      await client.query("UPDATE lost_items SET status = 'pending_claim' WHERE item_id = $1", [item_id]);
-    }
-    
-    // Create the claim
-    const result = await client.query(
+    const result = await pool.query(
       'INSERT INTO claims(user_id, item_id, item_type, status) VALUES($1, $2, $3, $4) RETURNING claim_id, user_id, item_id, item_type, status, created_at',
       [userId, item_id, item_type, 'pending']
     );
     
-    await client.query('COMMIT');
     res.status(201).json({ ok: true, claim: result.rows[0] });
   } catch (err) {
-    await client.query('ROLLBACK');
     console.error('Claim error:', err);
     res.status(500).json({ ok: false, error: 'Failed to create claim' });
-  } finally {
-    client.release();
   }
 });
 
