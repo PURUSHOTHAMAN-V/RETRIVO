@@ -37,7 +37,6 @@ const AppContent = () => {
     }}>
       <Header />
       <main style={{ flex: 1 }}>
-        <ChatBot />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginSelection />} />
@@ -59,6 +58,7 @@ const AppContent = () => {
         </Routes>
       </main>
       {!shouldHideFooter && <Footer />}
+      <ChatBot />
     </div>
   );
 };

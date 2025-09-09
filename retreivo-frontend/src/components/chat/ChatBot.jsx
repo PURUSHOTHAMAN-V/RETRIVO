@@ -1,271 +1,215 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { sendChatMessage, getChatHistory } from '../../services/api';
-import { FiSend, FiMessageSquare, FiX } from 'react-icons/fi';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState, useEffect, useRef } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
+import { FiSend, FiMessageCircle, FiX } from 'react-icons/fi'
+import './ChatBot.css' // We'll create this file next
 
-const ChatBot = () => {
+export default function ChatBot() {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
-  const { isAuthenticated } = useAuth();
 
-  // Fetch chat history when component mounts and chat is opened
+  // Fetch chat history when component mounts
   useEffect(() => {
-    if (isOpen && isAuthenticated) {
+    if (user && isOpen) {
       fetchChatHistory();
+    } else if (isOpen) {
+      // For non-authenticated users, show a welcome message
+      setChatHistory([
+        { message_id: 1, content: 'Hello! I\'m here to help with anything you need. Feel free to ask about Retreivo or any other topic!', is_bot: true, created_at: new Date().toISOString() },
+      ]);
     }
-  }, [isOpen, isAuthenticated]);
+  }, [user, isOpen]);
 
-  // Scroll to bottom of messages
+  // Auto-scroll to bottom of messages
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
-
-  const fetchChatHistory = async () => {
-    if (!isAuthenticated) return;
-    
-    try {
-      setLoading(true);
-      setError('');
-      const response = await getChatHistory();
-      if (response.ok && response.messages) {
-        setMessages(response.messages);
-      }
-    } catch (err) {
-      setError('Failed to load chat history');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!message.trim() || !isAuthenticated) return;
-
-    try {
-      setLoading(true);
-      setError('');
-      
-      // Add user message to UI immediately
-      const userMessage = {
-        message_id: Date.now(),
-        content: message,
-        is_bot: false,
-        created_at: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, userMessage]);
-      setMessage('');
-      
-      // Send message to API
-      const response = await sendChatMessage(message);
-      if (response.ok && response.message) {
-        // Add bot response from API
-        setMessages(prev => [...prev, response.message]);
-      }
-    } catch (err) {
-      setError('Failed to send message');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [chatHistory]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
+  const fetchChatHistory = async () => {
+    try {
+      setLoading(true);
+      // Mock chat history for now
+      const mockHistory = [
+        { message_id: 1, content: 'Hello! I\'m here to help with anything you need. Feel free to ask about Retreivo or any other topic!', is_bot: true, created_at: new Date().toISOString() },
+      ];
+      setChatHistory(mockHistory);
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleSendMessage = async () => {
+    if (!message.trim()) return;
+
+    // Add user message to chat
+    const userMessage = {
+      message_id: Date.now(),
+      content: message,
+      is_bot: false,
+      created_at: new Date().toISOString()
+    };
+
+    setChatHistory(prev => [...prev, userMessage]);
+    setMessage('');
+    setLoading(true);
+
+    try {
+      // Mock bot response
+      setTimeout(() => {
+        let botResponse = '';
+        
+        // Retreivo-specific responses
+        if (message.toLowerCase().includes('lost') || message.toLowerCase().includes('missing')) {
+          botResponse = 'To report a lost item, please go to the "Report Lost Item" section and provide details about your item.';
+        } else if (message.toLowerCase().includes('found')) {
+          botResponse = 'Thank you for finding an item! Please go to the "Report Found Item" section to help return it to its owner.';
+        } else if (message.toLowerCase().includes('reward') || message.toLowerCase().includes('points')) {
+          botResponse = 'You can earn rewards by helping return lost items to their owners. Check your rewards balance in the "Rewards" section.';
+        } else if (message.toLowerCase().includes('claim')) {
+          botResponse = 'If you see your lost item in the search results, you can claim it by clicking the "Claim" button on the item.';
+        } 
+        // General responses
+        else if (message.toLowerCase().includes('hello') || message.toLowerCase().includes('hi')) {
+          botResponse = 'Hello! I\'m here to help with anything you need. Feel free to ask me about Retreivo or any other topic.';
+        } else if (message.toLowerCase().includes('weather')) {
+          botResponse = 'I don\'t have real-time weather data, but I can suggest checking a weather app or website for the most accurate forecast.';
+        } else if (message.toLowerCase().includes('time')) {
+          botResponse = `The current time is ${new Date().toLocaleTimeString()}.`;
+        } else if (message.toLowerCase().includes('date')) {
+          botResponse = `Today's date is ${new Date().toLocaleDateString()}.`;
+        } else if (message.toLowerCase().includes('joke')) {
+          const jokes = [
+            'Why don\'t scientists trust atoms? Because they make up everything!',
+            'What do you call a fake noodle? An impasta!',
+            'Why did the scarecrow win an award? Because he was outstanding in his field!',
+            'I told my wife she was drawing her eyebrows too high. She looked surprised.',
+            'What do you call a bear with no teeth? A gummy bear!'
+          ];
+          botResponse = jokes[Math.floor(Math.random() * jokes.length)];
+        } else if (message.toLowerCase().includes('thank')) {
+          botResponse = 'You\'re welcome! Is there anything else I can help you with?';
+        } else if (message.toLowerCase().includes('name')) {
+          botResponse = 'I\'m the Smart Assistant! I can help with Retreivo features and general questions too!';
+        } else if (message.toLowerCase().includes('how are you')) {
+          botResponse = 'I\'m doing well, thank you for asking! How can I assist you today?';
+        } else if (message.toLowerCase().includes('bye') || message.toLowerCase().includes('goodbye')) {
+          botResponse = 'Goodbye! Feel free to chat again if you need any help.';
+        } else if (message.toLowerCase().includes('help')) {
+          botResponse = 'I can help with Retreivo features like reporting lost items, finding items, or claiming rewards. I can also answer general questions, tell jokes, or just chat!';
+        } else if (message.toLowerCase().includes('what can you do')) {
+          botResponse = 'I can answer questions about Retreivo, tell you the time and date, share jokes, provide general information, and chat with you about various topics!';
+        } else if (message.toLowerCase().includes('who made you') || message.toLowerCase().includes('who created you')) {
+          botResponse = 'I was created by the Retreivo development team to help users with both Retreivo-specific questions and general inquiries.';
+        } else if (message.toLowerCase().includes('calculate') || message.toLowerCase().includes('math')) {
+          botResponse = 'I can help with basic calculations! Just type your math question clearly, like "what is 5 + 3?" or "calculate 10 * 4".';
+        } else if (message.toLowerCase().includes('music') || message.toLowerCase().includes('song')) {
+          botResponse = 'I can\'t play music directly, but I can recommend some great music apps or websites where you can listen to your favorite songs!';
+        } else if (message.toLowerCase().includes('movie') || message.toLowerCase().includes('film')) {
+          botResponse = 'I love movies! I can recommend some popular films or tell you about the latest releases if you\'re interested.';
+        } else if (message.toLowerCase().includes('food') || message.toLowerCase().includes('recipe')) {
+          botResponse = 'I can suggest some delicious recipes or recommend food options based on your preferences. What kind of cuisine are you interested in?';
+        } else if (message.toLowerCase().includes('book') || message.toLowerCase().includes('read')) {
+          botResponse = 'Reading is wonderful! I can recommend books from various genres or discuss popular authors if you\'d like some reading suggestions.';
+        } else if (message.toLowerCase().includes('sport') || message.toLowerCase().includes('game')) {
+          botResponse = 'Sports are exciting! I can chat about different sports, recent games, or popular teams. Which sport interests you the most?';
+        } else if (message.toLowerCase().includes('travel') || message.toLowerCase().includes('vacation')) {
+          botResponse = 'Traveling is a great way to explore new places and cultures! I can suggest popular destinations or travel tips if you\'re planning a trip.';
+        } else if (message.toLowerCase().includes('technology') || message.toLowerCase().includes('tech')) {
+          botResponse = 'Technology is fascinating! I can discuss the latest tech trends, gadgets, or answer questions about specific technologies you\'re interested in.';
+        } else if (message.toLowerCase().includes('health') || message.toLowerCase().includes('fitness')) {
+          botResponse = 'Health and fitness are important! I can share general wellness tips, exercise suggestions, or information about maintaining a healthy lifestyle.';
+        } else if (message.toLowerCase().includes('education') || message.toLowerCase().includes('learn')) {
+          botResponse = 'Learning is a lifelong journey! I can suggest educational resources, discuss various subjects, or help you find information on topics you want to learn about.';
+        } else {
+          // General fallback response
+          botResponse = 'I\'m here to help with both Retreivo features and general questions. Feel free to ask me about lost items, rewards, or anything else you\'re curious about!';
+        }
+
+        const botMessageObj = {
+          message_id: Date.now() + 1,
+          content: botResponse,
+          is_bot: true,
+          created_at: new Date().toISOString()
+        };
+
+        setChatHistory(prev => [...prev, botMessageObj]);
+        setLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Remove the user check to make the chatbot visible for all users
+  // if (!user) return null;
+
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: '20px',
-      right: '20px',
-      zIndex: 1000
-    }}>
-      {/* Chat Button */}
-      <button
-        onClick={toggleChat}
-        style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          border: 'none',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer'
-        }}
+    <div className="chatbot-container">
+      {/* Chat toggle button */}
+      <button 
+        className="chat-toggle-button"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Toggle chat"
       >
-        {isOpen ? <FiX size={24} /> : <FiMessageSquare size={24} />}
+        {isOpen ? <FiX size={24} /> : <FiMessageCircle size={24} />}
       </button>
 
-      {/* Chat Window */}
+      {/* Chat window */}
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          bottom: '80px',
-          right: '0',
-          width: '350px',
-          height: '500px',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
-        }}>
-          {/* Chat Header */}
-          <div style={{
-            padding: '16px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            fontWeight: '600',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <span>Retreivo Assistant</span>
-            <button
-              onClick={toggleChat}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer'
-              }}
-            >
-              <FiX size={20} />
+        <div className="chat-window">
+          <div className="chat-header">
+            <h3>Smart Assistant</h3>
+            <button onClick={() => setIsOpen(false)} className="close-button">
+              <FiX size={18} />
             </button>
           </div>
-
-          {/* Messages Container */}
-          <div style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px'
-          }}>
-            {loading && messages.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
-                Loading messages...
-              </div>
-            )}
-
-            {error && (
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '10px', 
-                color: '#ef4444',
-                backgroundColor: '#fee2e2',
-                borderRadius: '8px'
-              }}>
-                {error}
-              </div>
-            )}
-
-            {!isAuthenticated && (
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '20px', 
-                color: '#6b7280',
-                backgroundColor: '#f3f4f6',
-                borderRadius: '8px'
-              }}>
-                Please log in to use the chat assistant.
-              </div>
-            )}
-
-            {messages.length === 0 && !loading && isAuthenticated && (
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '20px', 
-                color: '#6b7280' 
-              }}>
-                Start a conversation with our assistant.
-              </div>
-            )}
-
-            {messages.map((msg) => (
-              <div
-                key={msg.message_id}
-                style={{
-                  maxWidth: '80%',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  backgroundColor: msg.is_bot ? '#f3f4f6' : '#3b82f6',
-                  color: msg.is_bot ? '#111827' : 'white',
-                  alignSelf: msg.is_bot ? 'flex-start' : 'flex-end',
-                  wordBreak: 'break-word'
-                }}
+          <div className="chat-messages">
+            {chatHistory.map((chat) => (
+              <div 
+                key={chat.message_id} 
+                className={`message ${chat.is_bot ? 'bot' : 'user'}`}
               >
-                {msg.content}
+                <div className="message-content">{chat.content}</div>
               </div>
             ))}
+            {loading && <div className="message bot"><div className="loading-dots"><span>.</span><span>.</span><span>.</span></div></div>}
             <div ref={messagesEndRef} />
           </div>
-
-          {/* Message Input */}
-          {isAuthenticated && (
-            <form
-              onSubmit={handleSendMessage}
-              style={{
-                display: 'flex',
-                padding: '12px',
-                borderTop: '1px solid #e5e7eb'
-              }}
+          <div className="chat-input">
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type a message..."
+              disabled={loading}
+            />
+            <button 
+              onClick={handleSendMessage} 
+              disabled={!message.trim() || loading}
+              className="send-button"
             >
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type a message..."
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  padding: '12px 16px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '24px',
-                  outline: 'none',
-                  marginRight: '8px'
-                }}
-              />
-              <button
-                type="submit"
-                disabled={!message.trim() || loading}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: message.trim() && !loading ? 'pointer' : 'not-allowed',
-                  opacity: message.trim() && !loading ? 1 : 0.7
-                }}
-              >
-                <FiSend size={18} />
-              </button>
-            </form>
-          )}
+              <FiSend size={18} />
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
-};
-
-export default ChatBot;
+}

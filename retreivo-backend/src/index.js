@@ -616,7 +616,7 @@ app.post('/api/ml/match-text', async (req, res) => {
     const data = await r.json();
     res.status(r.status).json(data);
   } catch (error) {
-    res.status(502).json({ ok: false, error: error.message });
+    res.status(502).json({ message: 'Not implemented' });
   }
 });
 

@@ -202,7 +202,7 @@ export default function LandingPage() {
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '20px'
           },
-          '@media (max-width: 480px)': {
+          '@media(maxWidth: 480px)': {
             gridTemplateColumns: '1fr',
             gap: '16px'
           }

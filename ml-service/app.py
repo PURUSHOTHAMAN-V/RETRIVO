@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.get("/health")
 def health():
-    return jsonify({"ok": True, "message": "ML service is running"})
+    return jsonify({"ok": True})
 
 
 @app.post("/match-image")

@@ -275,7 +275,7 @@ export default function Header() {
             fontSize: '24px',
             cursor: 'pointer',
             color: '#111827',
-            '@media(maxWidth: 768px)': {
+            '@media (max-width: 768px)': {
               display: 'block'
             }
           }}
