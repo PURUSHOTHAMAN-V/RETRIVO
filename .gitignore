@@ -1,0 +1,5 @@
+# Ignore Python virtual environments
+flask_env/
+ml-service/flask_env/
+venv/
+.venv/

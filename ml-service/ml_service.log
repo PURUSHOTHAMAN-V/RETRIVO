@@ -1,0 +1,88 @@
+2025-09-08 18:40:46,976 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://192.168.71.145:8000
+2025-09-08 18:40:46,977 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-09-08 18:40:58,908 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:40:58] "[33mGET / HTTP/1.1[0m" 404 -
+2025-09-08 18:40:59,013 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:40:59] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-09-08 18:41:01,518 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:41:01] "[33mGET / HTTP/1.1[0m" 404 -
+2025-09-08 18:41:02,352 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:41:02] "[33mGET / HTTP/1.1[0m" 404 -
+2025-09-08 18:41:09,593 - werkzeug - INFO - 192.168.71.145 - - [08/Sep/2025 18:41:09] "[33mGET / HTTP/1.1[0m" 404 -
+2025-09-08 18:41:09,703 - werkzeug - INFO - 192.168.71.145 - - [08/Sep/2025 18:41:09] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-09-08 18:44:58,754 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:44:58] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:44:58,869 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:44:58] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:45:23,022 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:45:23] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:45:42,809 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:45:42] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:45:43,569 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:45:43] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:47:18,507 - __main__ - INFO - Stored lost item: 1
+2025-09-08 18:47:18,508 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:47:18] "POST /store-item HTTP/1.1" 200 -
+2025-09-08 18:47:42,467 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:47:42] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:47:43,573 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:47:43] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:47:44,272 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:47:44] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:47:44,814 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:47:44] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:47:45,324 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:47:45] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:47:45,543 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:47:45] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:49:12,638 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:49:12] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:49:13,604 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:49:13] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:49:14,304 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:49:14] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:50:37,811 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:50:37] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:51:29,164 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:51:29] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 18:53:45,868 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:53:45] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:53:45,878 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:53:45] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:54:30,206 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://192.168.71.145:8000
+2025-09-08 18:54:30,206 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-09-08 18:54:49,976 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:54:49] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:54:49,990 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:54:49] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:54:50,005 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:54:50] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:58:47,555 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://192.168.71.145:8000
+2025-09-08 18:58:47,556 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-09-08 18:58:56,647 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:58:56] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:58:56,658 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:58:56] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:58:56,667 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:58:56] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:59:45,203 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:59:45] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:59:45,214 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:59:45] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:59:45,223 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:59:45] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:59:50,159 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:59:50] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:59:50,167 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:59:50] "GET /health HTTP/1.1" 200 -
+2025-09-08 18:59:50,174 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 18:59:50] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:01:21,297 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:01:21] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:01:21,307 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:01:21] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:01:27,520 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:01:27] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:01:30,544 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:01:30] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:01:31,394 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:01:31] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:02:28,763 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:02:28] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:02:31,362 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:02:31] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:02:31,608 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:02:31] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:02:32,480 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:02:32] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:05:58,797 - __main__ - INFO - Stored found item: 1
+2025-09-08 19:05:58,798 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:05:58] "POST /store-item HTTP/1.1" 200 -
+2025-09-08 19:06:16,361 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:06:16] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:06:17,277 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:06:17] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:08:16,418 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:08:16] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:08:16,435 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:08:16] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:12:03,841 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:12:03] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:12:03,851 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:12:03] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:12:03,858 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:12:03] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:12:42,776 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:12:42] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:12:42,797 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:12:42] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:15:49,349 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:15:49] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:15:49,373 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:15:49] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:15:49,387 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:15:49] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:17:34,303 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:17:34] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:17:34,326 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:17:34] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:17:34,363 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:17:34] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:26:08,234 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:26:08] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:26:08,242 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:26:08] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:26:36,310 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:26:36] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:26:37,599 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:26:37] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:26:38,395 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:26:38] "POST /match-item HTTP/1.1" 200 -
+2025-09-08 19:27:50,138 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:27:50] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:30:55,482 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:30:55] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:32:53,201 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:32:53] "GET /health HTTP/1.1" 200 -
+2025-09-08 19:32:53,214 - werkzeug - INFO - 127.0.0.1 - - [08/Sep/2025 19:32:53] "GET /health HTTP/1.1" 200 -
